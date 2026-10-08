@@ -1,35 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎲 Student Random System & Seat Picker</title>
+  <title>🎲 LabQuest — Student Random System & 50-Seat Picker</title>
+  
+  <!-- Fonts: Inter & Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Canvas Confetti -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
+  <!-- FontAwesome 6 Pro CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
           colors: {
             brand: {
               50: '#eef2ff',
               100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
               500: '#6366f1',
               600: '#4f46e5',
               700: '#4338ca',
               800: '#3730a3',
-              900: '#312e81'
+              900: '#312e81',
+              950: '#1e1b4b'
+            },
+            surface: {
+              base: '#0B0F19',
+              card: '#111827',
+              cardHover: '#172033',
+              border: '#1F293D',
+              borderLight: '#2A3750',
+              input: '#0d1322'
             }
           },
+          boxShadow: {
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.35)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.35)',
+            'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.35)',
+            'card-glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+          },
           animation: {
-            'bounce-short': 'bounce 0.6s ease-in-out 2',
-            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+            'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 4s ease-in-out infinite',
+            'shimmer': 'shimmer 2s linear infinite'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' }
+            },
+            shimmer: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' }
+            }
           }
         }
       }
@@ -37,31 +78,47 @@
   </script>
 
   <style>
-    /* Custom stripes for unavailable seats */
-    .seat-unavailable {
-      background: repeating-linear-gradient(
-        45deg,
-        #fef2f2,
-        #fef2f2 6px,
-        #fee2e2 6px,
-        #fee2e2 12px
-      );
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
     }
-    .dark .seat-unavailable {
+    ::-webkit-scrollbar-track {
+      background: #0B0F19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1F293D;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #374151;
+    }
+
+    /* Seat Broken Stripes */
+    .seat-broken-pattern {
       background: repeating-linear-gradient(
-        45deg,
-        #450a0a,
-        #450a0a 6px,
-        #7f1d1d 6px,
-        #7f1d1d 12px
+        -45deg,
+        rgba(244, 63, 94, 0.08),
+        rgba(244, 63, 94, 0.08) 8px,
+        rgba(244, 63, 94, 0.18) 8px,
+        rgba(244, 63, 94, 0.18) 16px
       );
     }
 
-    /* Print styling */
+    /* Neighbor highlight halo */
+    .neighbor-highlight {
+      outline: 2px dashed #f59e0b !important;
+      outline-offset: 2px;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.45) !important;
+      transform: scale(1.05);
+      z-index: 20;
+    }
+
+    /* Print Styles */
     @media print {
       body {
-        background: white !important;
-        color: black !important;
+        background: #ffffff !important;
+        color: #000000 !important;
       }
       .no-print {
         display: none !important;
@@ -69,9 +126,10 @@
       .print-only {
         display: block !important;
       }
-      .card-box {
+      .print-card {
+        border: 1px solid #cbd5e1 !important;
         box-shadow: none !important;
-        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
       }
     }
     .print-only {
@@ -79,302 +137,365 @@
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-surface-base text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white flex flex-col justify-between">
 
-  <!-- TOP HEADER -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 no-print">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white text-xl">
-          <i class="fa-solid fa-dice-d20"></i>
+  <!-- ========================================================================= -->
+  <!-- TOP NAVIGATION HEADER -->
+  <!-- ========================================================================= -->
+  <header class="border-b border-surface-border bg-surface-base/85 backdrop-blur-xl sticky top-0 z-40 no-print transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Brand & App Identity -->
+        <div class="flex items-center space-x-3.5">
+          <div class="relative group">
+            <div class="absolute -inset-0.5 bg-gradient-to-r from-brand-500 to-purple-600 rounded-xl blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
+            <div class="relative h-10 w-10 rounded-xl bg-surface-card border border-brand-500/40 flex items-center justify-center text-brand-400 text-lg shadow-lg">
+              <i class="fa-solid fa-cube"></i>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-base sm:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-brand-300 bg-clip-text text-transparent">
+                SeatPicker Pro
+              </h1>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/10 text-brand-400 border border-brand-500/30">
+                v2.0 LAB
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 font-medium flex items-center">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+              Anti-Cheating Lab Assignment System
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
-            System & Seat Picker
-          </h1>
-          <p class="text-xs text-slate-400">Randomized Assignment & Lab Anti-Cheating System</p>
-        </div>
-      </div>
 
-      <!-- Quick Actions / Nav -->
-      <div class="flex items-center space-x-2 sm:space-x-3">
-        <button onclick="switchTab('picker')" id="tab-btn-picker" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
-          <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Picker & Map
-        </button>
-        <button onclick="switchTab('records')" id="tab-btn-records" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-300 hover:bg-slate-800">
-          <i class="fa-solid fa-table-list mr-1.5"></i> Assignments (<span id="nav-count-records">0</span>)
-        </button>
-        <button onclick="switchTab('pool')" id="tab-btn-pool" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-300 hover:bg-slate-800">
-          <i class="fa-solid fa-layer-group mr-1.5"></i> Topics Pool (<span id="nav-count-pool">0</span>)
-        </button>
+        <!-- Navigation Tabs -->
+        <nav class="flex items-center space-x-1.5 bg-surface-card/90 p-1 rounded-xl border border-surface-border shadow-inner">
+          <button onclick="switchTab('picker')" id="tab-btn-picker" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md shadow-brand-600/30">
+            <i class="fa-solid fa-dice text-sm"></i>
+            <span class="hidden sm:inline">Picker & Map</span>
+          </button>
+          <button onclick="switchTab('records')" id="tab-btn-records" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-surface-border/40">
+            <i class="fa-solid fa-list-check text-sm"></i>
+            <span class="hidden sm:inline">Assignments</span>
+            <span id="nav-count-records" class="px-1.5 py-0.2 rounded-md bg-surface-border text-[10px] font-mono font-bold text-slate-300">0</span>
+          </button>
+          <button onclick="switchTab('pool')" id="tab-btn-pool" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-surface-border/40">
+            <i class="fa-solid fa-layer-group text-sm"></i>
+            <span class="hidden sm:inline">Topic Pool</span>
+            <span id="nav-count-pool" class="px-1.5 py-0.2 rounded-md bg-surface-border text-[10px] font-mono font-bold text-slate-300">0</span>
+          </button>
+        </nav>
+
+        <!-- Right System Clock & Quick Help -->
+        <div class="hidden md:flex items-center space-x-3 text-xs text-slate-400">
+          <div class="flex items-center space-x-1.5 font-mono px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border">
+            <i class="fa-regular fa-clock text-brand-400 text-[11px]"></i>
+            <span id="live-clock">--:--:--</span>
+          </div>
+          <button onclick="openHelpModal()" class="p-2 rounded-lg bg-surface-card hover:bg-surface-border text-slate-400 hover:text-white transition-all border border-surface-border" title="Quick Guide & Anti-Cheating Rules">
+            <i class="fa-regular fa-circle-question"></i>
+          </button>
+        </div>
+
       </div>
     </div>
   </header>
 
-  <!-- MAIN WRAPPER -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <!-- ========================================================================= -->
+  <!-- MAIN APPLICATION CONTENT -->
+  <!-- ========================================================================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
 
     <!-- ========================================================================= -->
-    <!-- TAB 1: PICKER & SEAT MAP VIEW -->
+    <!-- VIEW 1: PICKER & INTERACTIVE 50-SEAT LAB MAP -->
     <!-- ========================================================================= -->
-    <section id="view-picker" class="space-y-6">
+    <div id="view-picker" class="space-y-6">
       
-      <!-- Top Overview Stats & Section Picker Bar -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <!-- Section Selector -->
-        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between">
+      <!-- Top Metrics & Section Selector Bar -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- 1. Section Selector Card -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex flex-col justify-between hover:border-surface-borderLight transition-all relative overflow-hidden group">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Section</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Active</span>
+            <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">Active Lab Section</span>
+            <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
           </div>
-          <select id="current-section-select" onchange="onSectionChange(this.value)" class="w-full bg-slate-900 border border-slate-700 text-white font-medium rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="BSIT - 21001">BSIT - 21001</option>
-            <option value="BSIT - 21002">BSIT - 21002</option>
-            <option value="BSIT - 21003">BSIT - 21003</option>
-            <option value="BSIT - 21007">BSIT - 21007</option>
-            <option value="BSIT - 21008">BSIT - 21008</option>
-            <option value="BSIT - 21009">BSIT - 21009</option>
-            <option value="ALL">All Sections (Overview)</option>
-          </select>
-        </div>
-
-        <!-- Available Seats Stat -->
-        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Available Seats</p>
-            <h3 id="stat-available-seats" class="text-2xl font-black text-white mt-1">50 <span class="text-xs font-normal text-slate-400">/ 50</span></h3>
-          </div>
-          <div class="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/20">
-            <i class="fa-solid fa-chair"></i>
+          <div class="relative">
+            <select id="current-section-select" onchange="onSectionChange(this.value)" class="w-full bg-surface-input border border-surface-border text-white font-bold rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all cursor-pointer">
+              <option value="BSIT - 21001">BSIT - 21001</option>
+              <option value="BSIT - 21002">BSIT - 21002</option>
+              <option value="BSIT - 21003">BSIT - 21003</option>
+              <option value="BSIT - 21007">BSIT - 21007</option>
+              <option value="BSIT - 21008">BSIT - 21008</option>
+              <option value="BSIT - 21009">BSIT - 21009</option>
+              <option value="ALL">All Sections (Overview)</option>
+            </select>
           </div>
         </div>
 
-        <!-- Occupied Seats Stat -->
-        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between">
+        <!-- 2. Available Seats Stat -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex items-center justify-between hover:border-emerald-500/40 transition-all group">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-sky-400">Assigned Students</p>
-            <h3 id="stat-occupied-seats" class="text-2xl font-black text-white mt-1">0</h3>
+            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">Available Workstations</p>
+            <h3 id="stat-available-seats" class="text-2xl sm:text-3xl font-black text-white mt-0.5 tracking-tight">50 <span class="text-xs font-mono font-normal text-slate-400">/ 50</span></h3>
+            <div class="w-24 h-1.5 bg-surface-border rounded-full mt-2 overflow-hidden">
+              <div id="stat-available-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
+            </div>
           </div>
-          <div class="h-11 w-11 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-xl border border-sky-500/20">
+          <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/20 group-hover:scale-105 transition-all">
+            <i class="fa-solid fa-desktop"></i>
+          </div>
+        </div>
+
+        <!-- 3. Occupied Seats Stat -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex items-center justify-between hover:border-brand-500/40 transition-all group">
+          <div>
+            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-brand-400">Assigned Students</p>
+            <h3 id="stat-occupied-seats" class="text-2xl sm:text-3xl font-black text-white mt-0.5 tracking-tight">0</h3>
+            <span id="stat-occupancy-rate" class="text-[10px] font-mono text-slate-400 block mt-1.5">0% Lab Occupancy</span>
+          </div>
+          <div class="h-12 w-12 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center text-xl border border-brand-500/20 group-hover:scale-105 transition-all">
             <i class="fa-solid fa-user-graduate"></i>
           </div>
         </div>
 
-        <!-- Unavailable Seats Stat -->
-        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between">
+        <!-- 4. Unavailable Seats Stat -->
+        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex items-center justify-between hover:border-rose-500/40 transition-all group">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-rose-400">Unavailable / Broken</p>
-            <h3 id="stat-unavailable-seats" class="text-2xl font-black text-white mt-1">0</h3>
+            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-400">Out of Order / Broken</p>
+            <h3 id="stat-unavailable-seats" class="text-2xl sm:text-3xl font-black text-white mt-0.5 tracking-tight">0</h3>
+            <span class="text-[10px] font-mono text-slate-400 block mt-1.5">Skipped by Picker</span>
           </div>
-          <div class="h-11 w-11 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl border border-rose-500/20">
-            <i class="fa-solid fa-ban"></i>
+          <div class="h-12 w-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl border border-rose-500/20 group-hover:scale-105 transition-all">
+            <i class="fa-solid fa-wrench"></i>
           </div>
         </div>
+
       </div>
 
-      <!-- Main Two Column Grid: Left Generator Form + Right Visual 50 Seats Map -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Main Layout: 2 Columns (Left: Generator Station | Right: Interactive 50-Seat Lab Canvas) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- ======================= LEFT: PICKER STATION ======================= -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="bg-surface-card border border-surface-border rounded-3xl p-5 sm:p-6 shadow-card-glass relative overflow-hidden">
+            <!-- Subtle ambient glow in background -->
+            <div class="absolute -top-20 -right-20 w-44 h-44 bg-brand-600/15 rounded-full blur-3xl pointer-events-none"></div>
 
-        <!-- ======================= LEFT: PICKER FORM ======================= -->
-        <div class="lg:col-span-5 space-y-5">
-          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-            <div class="absolute -top-12 -right-12 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-            <div class="flex items-center space-x-2 mb-5">
-              <span class="p-2 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
-                <i class="fa-solid fa-id-card-clip text-lg"></i>
-              </span>
+            <!-- Card Header -->
+            <div class="flex items-center space-x-3 mb-5">
+              <div class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white text-base shadow-md shadow-brand-600/30">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
               <div>
-                <h2 class="text-base font-bold text-white">Student Assignment</h2>
-                <p class="text-xs text-slate-400">Enter student information to generate topic & seat</p>
+                <h2 class="text-base font-bold text-white tracking-tight">Assignment Station</h2>
+                <p class="text-xs text-slate-400">Pick randomized project & workstation</p>
               </div>
             </div>
 
+            <!-- Picker Form -->
             <form id="picker-form" onsubmit="handlePickSystem(event)" class="space-y-4">
-              <!-- Student Name -->
+              
+              <!-- Student Name Input -->
               <div>
-                <label for="student-name" class="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Student Name <span class="text-rose-400">*</span>
+                <label for="student-name" class="flex items-center justify-between text-xs font-semibold text-slate-300 mb-1.5">
+                  <span>Student Full Name <span class="text-rose-400">*</span></span>
+                  <span class="text-[10px] text-slate-500 font-mono">Press ENTER to pick</span>
                 </label>
                 <div class="relative">
                   <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <i class="fa-solid fa-user"></i>
+                    <i class="fa-solid fa-id-badge text-sm"></i>
                   </div>
-                  <input type="text" id="student-name" required placeholder="e.g., Juan Dela Cruz" 
-                    class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                  <input type="text" id="student-name" required placeholder="e.g., Juan Dela Cruz" autocomplete="off"
+                    class="w-full bg-surface-input border border-surface-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all font-medium">
                 </div>
               </div>
 
-              <!-- Section Input & Presets -->
+              <!-- Section Input & Preset Chips -->
               <div>
                 <div class="flex items-center justify-between mb-1.5">
-                  <label for="student-section" class="block text-xs font-semibold text-slate-300">
-                    Section <span class="text-rose-400">*</span>
+                  <label for="student-section" class="text-xs font-semibold text-slate-300">
+                    Section Code <span class="text-rose-400">*</span>
                   </label>
-                  <span class="text-[11px] text-slate-400">Quick Presets</span>
+                  <span class="text-[10px] font-mono text-slate-400">Presets</span>
                 </div>
                 <input type="text" id="student-section" required value="BSIT - 21001" placeholder="e.g., BSIT - 21001" 
-                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2">
+                  class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white font-bold focus:outline-none focus:ring-2 focus:ring-brand-500 mb-2 transition-all">
                 
                 <!-- Quick Preset Chips -->
-                <div class="flex flex-wrap gap-1.5">
-                  <button type="button" onclick="setSectionPreset('BSIT - 21001')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21001</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21002')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21002</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21003')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21003</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21007')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21007</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21008')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21008</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21009')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21009</button>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button type="button" onclick="setSectionPreset('BSIT - 21001')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21001</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21002')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21002</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21003')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21003</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21007')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21007</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21008')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21008</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21009')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21009</button>
                 </div>
               </div>
 
-              <!-- Manual Seat Number (Optional) -->
+              <!-- Seat Assignment Mode (Auto Random vs Specific) -->
               <div>
-                <label for="preferred-seat" class="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Seat Assignment Mode
+                <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Seat Allocation Strategy
                 </label>
                 <div class="grid grid-cols-2 gap-2">
-                  <button type="button" id="seat-mode-random-btn" onclick="setSeatAssignmentMode('random')" class="px-3 py-2 rounded-xl text-xs font-medium border border-indigo-500 bg-indigo-600/20 text-indigo-300 transition-all flex items-center justify-center">
-                    <i class="fa-solid fa-shuffle mr-1.5"></i> Random Seat (1-50)
+                  <button type="button" id="seat-mode-random-btn" onclick="setSeatAssignmentMode('random')" class="px-3 py-2 rounded-xl text-xs font-bold border border-brand-500 bg-brand-500/20 text-brand-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-shuffle text-[11px]"></i>
+                    <span>Auto Random (1-50)</span>
                   </button>
-                  <button type="button" id="seat-mode-manual-btn" onclick="setSeatAssignmentMode('manual')" class="px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center">
-                    <i class="fa-solid fa-hand-pointer mr-1.5"></i> Specific Seat
+                  <button type="button" id="seat-mode-manual-btn" onclick="setSeatAssignmentMode('manual')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-surface-border bg-surface-input text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-hand-pointer text-[11px]"></i>
+                    <span>Manual Seat</span>
                   </button>
                 </div>
                 <div id="manual-seat-input-container" class="hidden mt-2">
-                  <input type="number" id="preferred-seat" min="1" max="50" placeholder="Enter seat # (1 - 50)"
-                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <div class="relative">
+                    <input type="number" id="preferred-seat" min="1" max="50" placeholder="Enter seat number (1 - 50)"
+                      class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <span class="absolute right-3 top-2.5 text-xs text-slate-500">Units 1–50</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Rules & Restrictions Toggle Controls -->
-              <div class="pt-2 border-t border-slate-700/60 space-y-2.5">
-                <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Randomization Rules</span>
+              <!-- Anti-Cheating & Randomization Options -->
+              <div class="pt-3 border-t border-surface-border space-y-2.5">
+                <span class="block text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Anti-Cheating Guardrails</span>
 
-                <!-- Adjacent Restriction Checkbox -->
-                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 hover:border-slate-600 transition-all">
-                  <input type="checkbox" id="avoid-adjacent" checked class="mt-0.5 rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
-                  <div>
-                    <span class="text-xs font-semibold text-white flex items-center">
-                      🛡️ Anti-Cheating Adjacent Restriction
-                      <span class="ml-1.5 text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">Recommended</span>
+                <!-- 1. Adjacent Restriction (Anti-cheating) -->
+                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-2xl bg-surface-input/80 border border-surface-border hover:border-surface-borderLight transition-all">
+                  <input type="checkbox" id="avoid-adjacent" checked class="mt-0.5 rounded bg-surface-card border-slate-700 text-brand-600 focus:ring-brand-500 h-4 w-4">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold text-white flex items-center">
+                        <i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5 text-xs"></i>
+                        Adjacent Seat Protection
+                      </span>
+                      <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">Active</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">Disallows same project in 8 surrounding neighbor seats (Front, Back, Left, Right & Diagonals).</p>
+                  </div>
+                </label>
+
+                <!-- 2. Avoid Duplicate in Entire Section -->
+                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-2xl bg-surface-input/80 border border-surface-border hover:border-surface-borderLight transition-all">
+                  <input type="checkbox" id="avoid-duplicate-section" class="mt-0.5 rounded bg-surface-card border-slate-700 text-brand-600 focus:ring-brand-500 h-4 w-4">
+                  <div class="flex-1">
+                    <span class="text-xs font-bold text-white flex items-center">
+                      <i class="fa-solid fa-repeat text-sky-400 mr-1.5 text-xs"></i>
+                      Unique Project Per Section
                     </span>
-                    <p class="text-[11px] text-slate-400 mt-0.5 leading-tight">Prevents adjacent & diagonal neighbors (Front, Back, Left, Right, Diagonals) from getting the same topic.</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">Ensures no two students in this section receive identical topics (pool size permitting).</p>
                   </div>
                 </label>
 
-                <!-- Section Unique Checkbox -->
-                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 hover:border-slate-600 transition-all">
-                  <input type="checkbox" id="avoid-duplicate-section" class="mt-0.5 rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
-                  <div>
-                    <span class="text-xs font-semibold text-white">🔄 Avoid Duplicate System in Entire Section</span>
-                    <p class="text-[11px] text-slate-400 mt-0.5 leading-tight">No two students in the same section will get identical topics (if pool size allows).</p>
-                  </div>
-                </label>
-
-                <!-- Allow Re-roll -->
-                <label class="flex items-center space-x-3 cursor-pointer px-2.5 py-1.5">
-                  <input type="checkbox" id="allow-reroll" class="rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
-                  <span class="text-xs text-slate-300">Allow Re-roll / Overwrite if student already has a record</span>
+                <!-- 3. Allow Re-roll -->
+                <label class="flex items-center space-x-2.5 cursor-pointer px-2 py-1 text-xs text-slate-400 hover:text-slate-300">
+                  <input type="checkbox" id="allow-reroll" class="rounded bg-surface-card border-slate-700 text-brand-600 focus:ring-brand-500 h-3.5 w-3.5">
+                  <span>Allow Re-roll if student is already assigned</span>
                 </label>
               </div>
 
-              <!-- Action Pick Button -->
-              <button type="submit" id="pick-btn" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-dice text-lg animate-spin-slow"></i>
-                <span>🎲 PICK RANDOM SYSTEM & SEAT</span>
+              <!-- BIG ROLL BUTTON -->
+              <button type="submit" id="pick-btn" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-extrabold text-sm shadow-glow-indigo transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2 group">
+                <i class="fa-solid fa-dice-d20 text-lg group-hover:rotate-180 transition-transform duration-500"></i>
+                <span class="tracking-wide">ROLL RANDOM SYSTEM & SEAT</span>
               </button>
             </form>
           </div>
 
-          <!-- Quick Notice Card -->
-          <div class="bg-indigo-950/30 border border-indigo-500/20 rounded-2xl p-4 text-xs text-indigo-200/80 flex items-start space-x-3">
-            <i class="fa-solid fa-circle-info text-indigo-400 mt-0.5 text-sm"></i>
-            <div>
-              <p class="font-semibold text-indigo-300">50 Seats Laboratory Map</p>
-              <p class="mt-0.5 leading-relaxed text-slate-400">
-                Seats 01–25 are in the <strong>Left Wing</strong>, and Seats 26–50 are in the <strong>Right Wing</strong> separated by the <strong>Center Aisle</strong>. Click any seat on the map to inspect or mark as broken!
-              </p>
+          <!-- Quick Lab Legend Card -->
+          <div class="bg-surface-card border border-surface-border rounded-2xl p-4 text-xs text-slate-400 space-y-2.5">
+            <div class="flex items-center justify-between font-mono font-bold text-[10px] uppercase text-slate-400">
+              <span>Workstation Map Legend</span>
+              <span>Click seat to inspect</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-[11px]">
+              <div class="flex items-center space-x-1.5 p-1.5 rounded-lg bg-surface-input border border-surface-border">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                <span class="text-slate-300 font-medium">Available</span>
+              </div>
+              <div class="flex items-center space-x-1.5 p-1.5 rounded-lg bg-surface-input border border-surface-border">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+                <span class="text-slate-300 font-medium">Assigned</span>
+              </div>
+              <div class="flex items-center space-x-1.5 p-1.5 rounded-lg bg-surface-input border border-surface-border">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                <span class="text-slate-300 font-medium">Broken</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- ======================= RIGHT: 50 SEATS MAP ======================= -->
-        <div class="lg:col-span-7">
-          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl">
+        <!-- ======================= RIGHT: 50-SEAT INTERACTIVE LAB ======================= -->
+        <div class="lg:col-span-8">
+          <div class="bg-surface-card border border-surface-border rounded-3xl p-5 sm:p-6 shadow-card-glass space-y-4">
             
-            <!-- Map Header & Controls -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-700/80">
+            <!-- Lab Canvas Header Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-border">
               <div>
-                <h2 class="text-base font-bold text-white flex items-center">
-                  <i class="fa-solid fa-network-wired text-indigo-400 mr-2"></i> Interactive 50-Seat Lab Layout
+                <h2 class="text-base font-extrabold text-white flex items-center tracking-tight">
+                  <i class="fa-solid fa-network-wired text-brand-400 mr-2"></i> Computer Laboratory 50-Seat Grid
                 </h2>
-                <p class="text-xs text-slate-400">Front Teacher Desk is at the top</p>
+                <p class="text-xs text-slate-400">Interactive live layout with center aisle walkway</p>
               </div>
 
+              <!-- Action Bar -->
               <div class="flex items-center space-x-2">
-                <button type="button" onclick="openBatchUnavailableModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-semibold transition-all">
-                  <i class="fa-solid fa-wrench mr-1"></i> Manage Broken Seats
+                <button type="button" onclick="openBatchUnavailableModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-bold transition-all flex items-center space-x-1.5">
+                  <i class="fa-solid fa-wrench text-[11px]"></i>
+                  <span>Manage Broken Units</span>
                 </button>
-                <button type="button" onclick="fetchSeatsMap()" title="Refresh Map" class="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 transition-all">
-                  <i class="fa-solid fa-arrows-rotate"></i>
+                <button type="button" onclick="fetchSeatsMap()" title="Refresh Lab Workstations" class="p-2 rounded-xl bg-surface-input border border-surface-border text-slate-400 hover:text-white hover:border-brand-500 transition-all">
+                  <i class="fa-solid fa-arrows-rotate text-xs"></i>
                 </button>
               </div>
             </div>
 
-            <!-- Front Teacher Desk / Whiteboard Visual Banner -->
-            <div class="my-4 py-2 px-4 rounded-xl bg-slate-900/90 border border-slate-700/60 text-center">
-              <span class="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                🖥️ INSTRUCTOR PODIUM & WHITEBOARD / FRONT OF ROOM
-              </span>
-            </div>
-
-            <!-- Legend -->
-            <div class="flex flex-wrap items-center justify-center gap-4 py-2 text-xs">
-              <div class="flex items-center space-x-1.5">
-                <span class="w-3.5 h-3.5 rounded-md bg-emerald-500/20 border border-emerald-500"></span>
-                <span class="text-slate-300 font-medium">Available</span>
-              </div>
-              <div class="flex items-center space-x-1.5">
-                <span class="w-3.5 h-3.5 rounded-md bg-indigo-600 border border-indigo-400"></span>
-                <span class="text-slate-300 font-medium">Occupied</span>
-              </div>
-              <div class="flex items-center space-x-1.5">
-                <span class="w-3.5 h-3.5 rounded-md seat-unavailable border border-rose-500"></span>
-                <span class="text-slate-300 font-medium">Unavailable / Broken</span>
+            <!-- Instructor Podium & Whiteboard (Front of Room) -->
+            <div class="relative py-2.5 px-4 rounded-2xl bg-gradient-to-r from-surface-input via-surface-border/40 to-surface-input border border-surface-border text-center overflow-hidden">
+              <div class="flex items-center justify-center space-x-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
+                <span class="text-[11px] font-mono font-bold uppercase tracking-widest text-slate-300">
+                  🖥️ INSTRUCTOR PODIUM & PROJECTOR SCREEN (FRONT)
+                </span>
               </div>
             </div>
 
             <!-- 50 SEATS GRID (Left Wing 5x5 + Center Aisle + Right Wing 5x5) -->
-            <div class="mt-4 overflow-x-auto pb-2">
-              <div class="min-w-[580px] grid grid-cols-11 gap-2 items-stretch">
+            <div class="overflow-x-auto pb-2 pt-1">
+              <div class="min-w-[620px] grid grid-cols-11 gap-2 items-stretch">
                 
-                <!-- Left Wing Header (Cols 1-5) -->
-                <div class="col-span-5 text-center py-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
-                  <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">Left Wing (Seats 01 - 25)</span>
+                <!-- Left Wing Header -->
+                <div class="col-span-5 text-center py-1.5 bg-surface-input/80 rounded-xl border border-surface-border flex items-center justify-center space-x-1.5">
+                  <i class="fa-solid fa-arrow-left text-[10px] text-brand-400"></i>
+                  <span class="text-[11px] font-mono font-bold text-brand-300 uppercase tracking-wider">LEFT WING (SEATS 01 – 25)</span>
                 </div>
 
-                <!-- Center Aisle Header (Col 6) -->
+                <!-- Center Aisle Header -->
                 <div class="col-span-1 text-center py-1 flex items-center justify-center">
-                  <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest writing-mode-vertical">AISLE</span>
+                  <span class="text-[9px] font-mono font-extrabold text-slate-500 uppercase tracking-widest">AISLE</span>
                 </div>
 
-                <!-- Right Wing Header (Cols 7-11) -->
-                <div class="col-span-5 text-center py-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
-                  <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">Right Wing (Seats 26 - 50)</span>
+                <!-- Right Wing Header -->
+                <div class="col-span-5 text-center py-1.5 bg-surface-input/80 rounded-xl border border-surface-border flex items-center justify-center space-x-1.5">
+                  <span class="text-[11px] font-mono font-bold text-brand-300 uppercase tracking-wider">RIGHT WING (SEATS 26 – 50)</span>
+                  <i class="fa-solid fa-arrow-right text-[10px] text-brand-400"></i>
                 </div>
 
-                <!-- 5 Rows Container -->
+                <!-- Dynamically Populated 50 Workstations (5 Rows x 11 Cols) -->
                 <div id="seats-container" class="col-span-11 grid grid-cols-11 gap-2">
-                  <!-- Generated Dynamically via JS -->
+                  <!-- Generated via JavaScript -->
                 </div>
 
               </div>
             </div>
 
-            <!-- Back of Lab Visual -->
-            <div class="mt-4 py-1.5 px-4 rounded-xl bg-slate-900/50 border border-slate-800 text-center">
-              <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-                🚪 BACK OF ROOM / ENTRANCE
+            <!-- Back of Room Walkway -->
+            <div class="py-1.5 px-4 rounded-xl bg-surface-input/50 border border-surface-border text-center">
+              <span class="text-[10px] font-mono font-semibold text-slate-500 uppercase tracking-widest">
+                🚪 BACK OF ROOM / MAIN ENTRANCE DOOR
               </span>
             </div>
 
@@ -383,26 +504,26 @@
 
       </div>
 
-    </section>
+    </div>
 
 
     <!-- ========================================================================= -->
-    <!-- TAB 2: ASSIGNMENT RECORDS & SEARCH & EXPORT -->
+    <!-- VIEW 2: ASSIGNMENT REGISTRY & ROSTER -->
     <!-- ========================================================================= -->
-    <section id="view-records" class="hidden space-y-6">
+    <div id="view-records" class="hidden space-y-5">
       
-      <!-- Top Actions Bar -->
-      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Top Registry Control Bar -->
+      <div class="bg-surface-card border border-surface-border rounded-3xl p-5 shadow-card-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
         
-        <!-- Left: Search & Filter -->
+        <!-- Search & Section Filter -->
         <div class="flex flex-wrap items-center gap-3 flex-1">
-          <div class="relative min-w-[240px] flex-1 max-w-md">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="records-search-input" oninput="debounceFetchRecords()" placeholder="Search student, system, seat..." 
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <div class="relative min-w-[260px] flex-1 max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="records-search-input" oninput="debounceFetchRecords()" placeholder="Search by student, topic, seat #..." 
+              class="w-full bg-surface-input border border-surface-border rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
           </div>
 
-          <select id="records-section-filter" onchange="fetchRecords()" class="bg-slate-900 border border-slate-700 text-white text-sm rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+          <select id="records-section-filter" onchange="fetchRecords()" class="bg-surface-input border border-surface-border text-white text-sm font-bold rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer">
             <option value="ALL">All Sections</option>
             <option value="BSIT - 21001">BSIT - 21001</option>
             <option value="BSIT - 21002">BSIT - 21002</option>
@@ -413,161 +534,188 @@
           </select>
         </div>
 
-        <!-- Right: Export & Clear -->
+        <!-- Export & Action Controls -->
         <div class="flex items-center space-x-2">
-          <button onclick="exportCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-600/20 flex items-center">
-            <i class="fa-solid fa-file-csv text-sm mr-1.5"></i> Export CSV
+          <button onclick="exportCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-glow-emerald transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-file-csv text-sm"></i>
+            <span>Export CSV</span>
           </button>
-          <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs transition-all flex items-center">
-            <i class="fa-solid fa-print text-sm mr-1.5"></i> Print
+          <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-surface-input hover:bg-surface-border border border-surface-border text-white font-bold text-xs transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-print text-sm"></i>
+            <span>Print Sheet</span>
           </button>
-          <button onclick="confirmClearRecords()" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-semibold text-xs transition-all flex items-center">
-            <i class="fa-solid fa-trash-can mr-1.5"></i> Clear
+          <button onclick="confirmClearRecords()" class="px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-bold text-xs transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Clear</span>
           </button>
         </div>
 
       </div>
 
-      <!-- Printable Sheet Header (Shows during print only) -->
-      <div class="print-only mb-6">
-        <h1 class="text-2xl font-bold text-black">Student Practical Assessment & Seat Assignment Sheet</h1>
-        <p class="text-sm text-gray-700">Course: Java Fundamentals | Generated: <span id="print-date"></span></p>
+      <!-- Printable Sheet Header (Displays only during browser print) -->
+      <div class="print-only mb-6 p-4 border-b">
+        <h1 class="text-2xl font-black text-black">Student Practical Exam System & Seat Assignment</h1>
+        <p class="text-sm text-gray-700">Course: Java Fundamentals Assessment | Generated on <span id="print-date"></span></p>
       </div>
 
-      <!-- Records Table Card -->
-      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl shadow-xl overflow-hidden card-box">
+      <!-- Records Table Container -->
+      <div class="bg-surface-card border border-surface-border rounded-3xl shadow-card-glass overflow-hidden print-card">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-300">
-            <thead class="bg-slate-900/80 text-xs uppercase font-bold text-slate-400 border-b border-slate-700">
+            <thead class="bg-surface-input/90 text-[11px] font-mono font-bold uppercase text-slate-400 border-b border-surface-border">
               <tr>
                 <th class="px-4 py-3.5">Seat</th>
                 <th class="px-4 py-3.5">Student Name</th>
                 <th class="px-4 py-3.5">Section</th>
-                <th class="px-4 py-3.5">Assigned System / Topic</th>
+                <th class="px-4 py-3.5">Assigned Project Topic</th>
                 <th class="px-4 py-3.5">Category</th>
                 <th class="px-4 py-3.5">Date & Time</th>
                 <th class="px-4 py-3.5 text-right no-print">Actions</th>
               </tr>
             </thead>
-            <tbody id="records-table-body" class="divide-y divide-slate-700/60">
-              <!-- Dynamically populated -->
+            <tbody id="records-table-body" class="divide-y divide-surface-border/60">
+              <!-- Rendered via JS -->
             </tbody>
           </table>
         </div>
 
-        <div id="records-empty-state" class="hidden p-12 text-center">
-          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-800 text-slate-400 mb-3">
-            <i class="fa-solid fa-folder-open text-xl"></i>
+        <!-- Empty State -->
+        <div id="records-empty-state" class="hidden p-16 text-center">
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-surface-input text-slate-500 mb-3 border border-surface-border">
+            <i class="fa-solid fa-folder-open text-2xl"></i>
           </div>
-          <p class="text-slate-300 font-medium">No assignment records found</p>
-          <p class="text-xs text-slate-500 mt-1">Use the Picker tab to assign topics to students.</p>
+          <h4 class="text-slate-200 font-bold text-base">No Assignment Records Found</h4>
+          <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Use the Assignment Station on the Picker tab to assign projects and lab seats to students.</p>
         </div>
       </div>
 
-    </section>
+    </div>
 
 
     <!-- ========================================================================= -->
-    <!-- TAB 3: TOPICS POOL MANAGEMENT -->
+    <!-- VIEW 3: TOPICS POOL STUDIO -->
     <!-- ========================================================================= -->
-    <section id="view-pool" class="hidden space-y-6">
+    <div id="view-pool" class="hidden space-y-5">
       
       <!-- Top Action Bar for Topics Pool -->
-      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="bg-surface-card border border-surface-border rounded-3xl p-5 shadow-card-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 class="text-base font-bold text-white flex items-center">
-            <i class="fa-solid fa-cube text-indigo-400 mr-2"></i> Topics & Practical Exam Systems Pool
+          <h2 class="text-base font-extrabold text-white flex items-center tracking-tight">
+            <i class="fa-solid fa-cubes text-brand-400 mr-2"></i> Practical Exam Topics Pool
           </h2>
-          <p class="text-xs text-slate-400">Manage, import, or export systems picked for students</p>
+          <p class="text-xs text-slate-400">Browse, add, or bulk import assessment problems and projects</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openAddTopicModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-600/20 flex items-center">
-            <i class="fa-solid fa-plus mr-1.5"></i> Add Topic
+          <button onclick="openAddTopicModal()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-glow-indigo transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Topic</span>
           </button>
-          <button onclick="openImportModal()" class="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs transition-all flex items-center">
-            <i class="fa-solid fa-file-import mr-1.5"></i> Import JSON/MD
+          <button onclick="openImportModal()" class="px-3.5 py-2 rounded-xl bg-surface-input hover:bg-surface-border border border-surface-border text-white font-bold text-xs transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-file-import"></i>
+            <span>Import JSON/MD</span>
           </button>
+          
+          <!-- Export Dropdown -->
           <div class="relative inline-block" id="export-dropdown-container">
-            <button onclick="toggleExportMenu()" class="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs transition-all flex items-center">
-              <i class="fa-solid fa-download mr-1.5"></i> Export <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i>
+            <button onclick="toggleExportMenu()" class="px-3.5 py-2 rounded-xl bg-surface-input hover:bg-surface-border border border-surface-border text-white font-bold text-xs transition-all flex items-center space-x-1.5">
+              <i class="fa-solid fa-download"></i>
+              <span>Export</span>
+              <i class="fa-solid fa-chevron-down text-[9px] ml-1"></i>
             </button>
-            <div id="export-menu" class="hidden absolute right-0 mt-2 w-36 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 py-1 text-xs">
-              <a href="/api/systems-pool/export/json" class="block px-3 py-2 text-slate-200 hover:bg-slate-700 flex items-center">
-                <i class="fa-solid fa-code mr-2 text-amber-400"></i> JSON File
+            <div id="export-menu" class="hidden absolute right-0 mt-2 w-44 bg-surface-card border border-surface-border rounded-2xl shadow-2xl z-50 py-1.5 text-xs">
+              <a href="/api/systems-pool/export/json" class="block px-3.5 py-2 text-slate-200 hover:bg-surface-border flex items-center space-x-2">
+                <i class="fa-solid fa-code text-amber-400"></i>
+                <span>JSON File (.json)</span>
               </a>
-              <a href="/api/systems-pool/export/md" class="block px-3 py-2 text-slate-200 hover:bg-slate-700 flex items-center">
-                <i class="fa-brands fa-markdown mr-2 text-sky-400"></i> Markdown Table
+              <a href="/api/systems-pool/export/md" class="block px-3.5 py-2 text-slate-200 hover:bg-surface-border flex items-center space-x-2">
+                <i class="fa-brands fa-markdown text-sky-400"></i>
+                <span>Markdown Table (.md)</span>
               </a>
             </div>
           </div>
-          <button onclick="confirmResetPool()" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-semibold text-xs transition-all flex items-center">
-            <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset to Default
+
+          <button onclick="confirmResetPool()" class="px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-bold text-xs transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Reset 25 Defaults</span>
           </button>
         </div>
       </div>
 
-      <!-- Topics Grid -->
+      <!-- Topics Catalog Grid -->
       <div id="topics-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Dynamically rendered topic cards -->
+        <!-- Rendered via JS -->
       </div>
 
-    </section>
+    </div>
 
   </main>
+
+  <!-- ========================================================================= -->
+  <!-- FOOTER -->
+  <!-- ========================================================================= -->
+  <footer class="border-t border-surface-border bg-surface-base py-4 text-center text-xs text-slate-500 no-print">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>Student Random System & 50-Seat Picker • Java Assessment Edition</span>
+      <span class="font-mono text-[11px] text-slate-400">Adjacent Anti-Cheating Algorithmic Protection</span>
+    </div>
+  </footer>
 
 
   <!-- ========================================================================= -->
   <!-- MODALS -->
   <!-- ========================================================================= -->
 
-  <!-- 1. ASSIGNMENT SUCCESS MODAL -->
-  <div id="modal-success" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
-    <div class="bg-slate-800 border border-indigo-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative animate-bounce-short">
+  <!-- 1. ASSIGNMENT SUCCESS RESULT MODAL -->
+  <div id="modal-success" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="bg-surface-card border border-brand-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative transform transition-all">
       
       <!-- Close Button -->
-      <button onclick="closeModal('modal-success')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
-        <i class="fa-solid fa-xmark text-lg"></i>
+      <button onclick="closeModal('modal-success')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+        <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
-      <!-- Badge Icon -->
-      <div class="text-center mb-4">
-        <div class="inline-flex p-3.5 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-900 text-2xl shadow-lg shadow-emerald-500/30 mb-2">
+      <!-- Badge Icon Header -->
+      <div class="text-center mb-5">
+        <div class="inline-flex p-4 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 text-2xl shadow-glow-emerald mb-2">
           <i class="fa-solid fa-award"></i>
         </div>
-        <h3 class="text-xl font-black text-white">System & Seat Assigned!</h3>
-        <p class="text-xs text-slate-400">Successfully generated for examination</p>
+        <h3 class="text-xl font-extrabold text-white tracking-tight">Assignment Successful!</h3>
+        <p class="text-xs text-slate-400">Randomized topic and workstation verified</p>
       </div>
 
-      <!-- Result Card -->
-      <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-5 space-y-3.5">
+      <!-- Result Card Body -->
+      <div class="bg-surface-input border border-surface-border rounded-2xl p-5 space-y-3.5">
         
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <!-- Student Info Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-surface-border">
           <div>
-            <span class="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Student Name</span>
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Student Name</span>
             <h4 id="modal-student-name" class="text-base font-black text-white">Juan Dela Cruz</h4>
           </div>
           <div class="text-right">
-            <span class="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Section</span>
-            <p id="modal-student-section" class="text-sm font-semibold text-indigo-400">BSIT - 21001</p>
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Section</span>
+            <p id="modal-student-section" class="text-xs font-bold text-brand-400 px-2 py-0.5 rounded-md bg-brand-500/10 border border-brand-500/20 mt-0.5">BSIT - 21001</p>
           </div>
         </div>
 
+        <!-- Seat & Category Badges -->
         <div class="grid grid-cols-3 gap-2 py-1">
-          <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 text-center">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Seat Assigned</span>
-            <span id="modal-seat-num" class="text-lg font-black text-emerald-400">Seat #12</span>
+          <div class="bg-surface-card p-3 rounded-xl border border-surface-border text-center">
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block">Workstation</span>
+            <span id="modal-seat-num" class="text-lg font-black text-emerald-400 font-mono">Seat #12</span>
           </div>
-          <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 text-center col-span-2">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">System Category</span>
+          <div class="bg-surface-card p-3 rounded-xl border border-surface-border text-center col-span-2">
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block">Category</span>
             <span id="modal-category" class="text-xs font-bold text-sky-300 line-clamp-1 mt-0.5">Java Practical Exam</span>
           </div>
         </div>
 
+        <!-- Project Details Box -->
         <div>
-          <span class="text-[11px] uppercase font-bold text-slate-400 block mb-1">Assigned Topic / System</span>
-          <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30">
-            <h5 id="modal-system-name" class="text-base font-black text-indigo-200">Student Grade Calculator</h5>
+          <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block mb-1">Assigned Project Title</span>
+          <div class="p-3.5 rounded-2xl bg-brand-950/40 border border-brand-500/30">
+            <h5 id="modal-system-name" class="text-sm font-extrabold text-brand-200">Student Grade Calculator</h5>
             <div id="modal-system-desc" class="text-xs text-slate-300 mt-2 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto pr-1"></div>
           </div>
         </div>
@@ -575,13 +723,14 @@
         <!-- Anti Cheat Notice -->
         <div id="modal-anticheat-box" class="hidden p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-[11px] text-emerald-300 flex items-center space-x-2">
           <i class="fa-solid fa-shield-halved text-sm text-emerald-400"></i>
-          <span>🛡️ Verified: Topic differs from all adjacent & diagonal neighbor seats!</span>
+          <span>🛡️ Verified: Topic differs from all adjacent & diagonal neighbor workstations.</span>
         </div>
 
       </div>
 
+      <!-- Action Button -->
       <div class="mt-5 flex gap-2">
-        <button onclick="closeModal('modal-success')" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-600/30">
+        <button onclick="closeModal('modal-success')" class="flex-1 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm transition-all shadow-glow-indigo">
           Done / Next Student
         </button>
       </div>
@@ -590,31 +739,33 @@
   </div>
 
 
-  <!-- 2. SEAT DETAIL & STATUS MODAL (When clicking a seat) -->
-  <div id="modal-seat-inspect" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
-    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+  <!-- 2. SEAT DETAIL & PROJECT DESCRIPTION MODAL -->
+  <div id="modal-seat-inspect" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-seat-inspect')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
-        <i class="fa-solid fa-xmark text-lg"></i>
+      <button onclick="closeModal('modal-seat-inspect')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+        <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
-      <div class="flex items-center space-x-3 mb-4">
-        <div id="inspect-seat-badge" class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-indigo-600 text-white border border-indigo-400 shadow-md">
+      <!-- Seat Modal Header -->
+      <div class="flex items-center space-x-3.5 mb-4">
+        <div id="inspect-seat-badge" class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-brand-600 text-white border border-brand-400 shadow-md font-mono">
           #1
         </div>
         <div>
-          <h3 id="inspect-seat-title" class="text-lg font-bold text-white">Seat #1</h3>
-          <p id="inspect-seat-status" class="text-xs text-emerald-400 font-semibold">Available</p>
+          <h3 id="inspect-seat-title" class="text-lg font-extrabold text-white">Workstation #1</h3>
+          <p id="inspect-seat-status" class="text-xs font-bold text-emerald-400">Available</p>
         </div>
       </div>
 
-      <div id="inspect-content" class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-300 space-y-2 mb-4">
-        <!-- Filled dynamically -->
+      <!-- Dynamic Content Body -->
+      <div id="inspect-content" class="bg-surface-input border border-surface-border rounded-2xl p-4 text-sm text-slate-300 space-y-3 mb-4">
+        <!-- Rendered dynamically -->
       </div>
 
-      <!-- Action Buttons for seat -->
+      <!-- Dynamic Action Buttons -->
       <div id="inspect-actions" class="space-y-2">
-        <!-- Filled dynamically -->
+        <!-- Rendered dynamically -->
       </div>
 
     </div>
@@ -622,53 +773,56 @@
 
 
   <!-- 3. BATCH MANAGE BROKEN SEATS MODAL -->
-  <div id="modal-batch-seats" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
-    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+  <div id="modal-batch-seats" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-batch-seats')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
-        <i class="fa-solid fa-xmark text-lg"></i>
+      <button onclick="closeModal('modal-batch-seats')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+        <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xl">
+        <div class="p-3 rounded-2xl bg-rose-500/15 text-rose-400 border border-rose-500/30 text-xl">
           <i class="fa-solid fa-screwdriver-wrench"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold text-white">Manage Unavailable Seats</h3>
-          <p class="text-xs text-slate-400">Disable broken PCs or damaged chairs from random selection</p>
+          <h3 class="text-lg font-extrabold text-white">Manage Broken Workstations</h3>
+          <p class="text-xs text-slate-400">Disable offline PCs or broken chairs from random selection</p>
         </div>
       </div>
 
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">
-            Seat Numbers (Comma Separated)
+            Workstation Numbers (Comma or Space Separated)
           </label>
           <input type="text" id="batch-seat-numbers" placeholder="e.g., 5, 8, 12, 23" 
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-rose-500">
           <p class="text-[11px] text-slate-400 mt-1">Enter valid seat numbers between 1 and 50.</p>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">
-            Reason / Notes (Optional)
+            Reason / Issue Note (Optional)
           </label>
-          <input type="text" id="batch-seat-reason" placeholder="e.g., Broken Monitor, No Power, Reserved Unit" 
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+          <input type="text" id="batch-seat-reason" placeholder="e.g., Broken Monitor, Power Issue, Reserved Unit" 
+            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
         </div>
 
         <div class="grid grid-cols-2 gap-3 pt-2">
-          <button type="button" onclick="submitBatchSeats(true)" class="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center">
-            <i class="fa-solid fa-ban mr-1.5"></i> Mark Unavailable
+          <button type="button" onclick="submitBatchSeats(true)" class="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-glow-rose transition-all flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-ban"></i>
+            <span>Mark Broken</span>
           </button>
-          <button type="button" onclick="submitBatchSeats(false)" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center">
-            <i class="fa-solid fa-check mr-1.5"></i> Restore Specified
+          <button type="button" onclick="submitBatchSeats(false)" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-glow-emerald transition-all flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-check"></i>
+            <span>Restore Available</span>
           </button>
         </div>
 
-        <div class="border-t border-slate-700/80 pt-3">
-          <button type="button" onclick="resetAllUnavailableSeats()" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-700 text-slate-300 hover:text-white font-medium text-xs border border-slate-700 transition-all flex items-center justify-center">
-            <i class="fa-solid fa-rotate-left mr-1.5"></i> Restore All 50 Seats to Available
+        <div class="border-t border-surface-border pt-3">
+          <button type="button" onclick="resetAllUnavailableSeats()" class="w-full py-2 px-4 rounded-xl bg-surface-input hover:bg-surface-border text-slate-300 hover:text-white font-medium text-xs border border-surface-border transition-all flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Restore All 50 Workstations</span>
           </button>
         </div>
       </div>
@@ -678,30 +832,30 @@
 
 
   <!-- 4. ADD TOPIC MODAL -->
-  <div id="modal-add-topic" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
-    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+  <div id="modal-add-topic" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-add-topic')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
-        <i class="fa-solid fa-xmark text-lg"></i>
+      <button onclick="closeModal('modal-add-topic')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+        <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xl">
+        <div class="p-3 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 text-xl">
           <i class="fa-solid fa-circle-plus"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold text-white">Add System / Topic</h3>
-          <p class="text-xs text-slate-400">Add a new exam problem or project to the pool</p>
+          <h3 class="text-lg font-extrabold text-white">Add Project to Pool</h3>
+          <p class="text-xs text-slate-400">Add a new exam problem or coding challenge</p>
         </div>
       </div>
 
       <form onsubmit="handleAddTopic(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">
-            System Name <span class="text-rose-400">*</span>
+            System / Project Name <span class="text-rose-400">*</span>
           </label>
-          <input type="text" id="add-topic-name" required placeholder="e.g., Library Book Lending System" 
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <input type="text" id="add-topic-name" required placeholder="e.g., Book Lending Calculator" 
+            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
         </div>
 
         <div>
@@ -709,19 +863,19 @@
             Category
           </label>
           <input type="text" id="add-topic-category" value="Java Practical Exam" placeholder="e.g., Java Practical Exam" 
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">
-            Description & Requirements
+            Description & Specifications
           </label>
           <textarea id="add-topic-desc" rows="5" placeholder="Enter problem statement, input/output requirements, etc."
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 font-sans"></textarea>
         </div>
 
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all">
-          Save Topic to Pool
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-glow-indigo transition-all">
+          Save Project to Pool
         </button>
       </form>
 
@@ -729,21 +883,21 @@
   </div>
 
 
-  <!-- 5. BULK IMPORT TOPICS MODAL -->
-  <div id="modal-import" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
-    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-xl w-full shadow-2xl relative">
+  <!-- 5. BULK IMPORT MODAL -->
+  <div id="modal-import" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-xl w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-import')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
-        <i class="fa-solid fa-xmark text-lg"></i>
+      <button onclick="closeModal('modal-import')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+        <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xl">
+        <div class="p-3 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 text-xl">
           <i class="fa-solid fa-file-import"></i>
         </div>
         <div>
-          <h3 class="text-lg font-bold text-white">Import Topics Pool</h3>
-          <p class="text-xs text-slate-400">Paste JSON array or Markdown table format</p>
+          <h3 class="text-lg font-extrabold text-white">Import Topics Data</h3>
+          <p class="text-xs text-slate-400">Paste JSON array or structured topic list</p>
         </div>
       </div>
 
@@ -752,29 +906,29 @@
           <label class="block text-xs font-semibold text-slate-300 mb-1">Import Mode</label>
           <div class="flex gap-4 text-xs text-slate-300">
             <label class="flex items-center space-x-2 cursor-pointer">
-              <input type="radio" name="import-mode" value="append" checked class="text-indigo-600">
-              <span>Append (keep existing)</span>
+              <input type="radio" name="import-mode" value="append" checked class="text-brand-600">
+              <span>Append (keep existing topics)</span>
             </label>
             <label class="flex items-center space-x-2 cursor-pointer">
-              <input type="radio" name="import-mode" value="replace" class="text-indigo-600">
+              <input type="radio" name="import-mode" value="replace" class="text-brand-600">
               <span>Replace (clear existing pool first)</span>
             </label>
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">JSON Content / Topics Data</label>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">JSON Content</label>
           <textarea id="import-content" rows="8" placeholder='[
   {
     "name": "ATM Simulation",
-    "category": "Java Fundamentals",
+    "category": "Java Practical Exam",
     "description": "Simulate PIN check, balance inquiry, deposit and withdrawal."
   }
-]' class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+]' class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
         </div>
 
-        <button type="button" onclick="submitImport()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all">
-          Run Import
+        <button type="button" onclick="submitImport()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-glow-indigo transition-all">
+          Execute Import
         </button>
       </div>
 
@@ -782,89 +936,95 @@
   </div>
 
 
-  <!-- 6. VIEW ASSIGNMENT DETAIL MODAL -->
-  <div id="modal-view-record" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
-    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+  <!-- 6. HELP & ANTI-CHEATING RULES MODAL -->
+  <div id="modal-help" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-view-record')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
-        <i class="fa-solid fa-xmark text-lg"></i>
+      <button onclick="closeModal('modal-help')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+        <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xl">
-          <i class="fa-solid fa-user-check"></i>
+        <div class="p-3 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 text-xl">
+          <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div>
-          <h3 id="record-detail-student" class="text-lg font-bold text-white">Student Name</h3>
-          <p id="record-detail-section" class="text-xs text-indigo-400 font-semibold">Section</p>
+          <h3 class="text-lg font-extrabold text-white">How Anti-Cheating Works</h3>
+          <p class="text-xs text-slate-400">Lab layout & neighbor restriction rules</p>
         </div>
       </div>
 
-      <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs text-slate-300 space-y-3 mb-4">
-        <div class="flex justify-between">
-          <span class="text-slate-400">Seat Number:</span>
-          <span id="record-detail-seat" class="font-bold text-emerald-400">Seat #1</span>
+      <div class="space-y-3.5 text-xs text-slate-300 leading-relaxed">
+        <div class="p-3 rounded-xl bg-surface-input border border-surface-border space-y-1.5">
+          <strong class="text-brand-300 block">🛡️ 8-Neighbor Workstation Exclusion</strong>
+          <p>When assigning a project to Seat #X, the algorithm queries all 8 adjacent workstations (Front, Back, Left, Right, and 4 Diagonals) within that 5x5 wing. The chosen student will NEVER receive the same project as their neighboring classmates!</p>
         </div>
-        <div class="flex justify-between">
-          <span class="text-slate-400">Category:</span>
-          <span id="record-detail-cat" class="font-bold text-sky-300">Java</span>
+
+        <div class="p-3 rounded-xl bg-surface-input border border-surface-border space-y-1.5">
+          <strong class="text-emerald-300 block">🪑 50 Seats Map with Center Aisle</strong>
+          <p>Left Wing: Seats 01 – 25 | Center Aisle | Right Wing: Seats 26 – 50.</p>
         </div>
-        <div>
-          <span class="text-slate-400 block mb-1">Assigned Topic:</span>
-          <p id="record-detail-topic" class="font-bold text-white text-sm bg-slate-800 p-2.5 rounded-lg border border-slate-700"></p>
-        </div>
-        <div>
-          <span class="text-slate-400 block mb-1">Details / Requirements:</span>
-          <div id="record-detail-desc" class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/60 whitespace-pre-line max-h-40 overflow-y-auto leading-relaxed"></div>
-        </div>
-        <div class="flex justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800">
-          <span>Date Picked:</span>
-          <span id="record-detail-date"></span>
+
+        <div class="p-3 rounded-xl bg-surface-input border border-surface-border space-y-1.5">
+          <strong class="text-rose-300 block">🚫 Broken Unit Management</strong>
+          <p>Click any workstation to mark it as broken / out of order. The random generator automatically bypasses all broken seats.</p>
         </div>
       </div>
 
-      <button onclick="closeModal('modal-view-record')" class="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs">
-        Close
+      <button onclick="closeModal('modal-help')" class="mt-5 w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-all">
+        Got it, Back to Lab
       </button>
 
     </div>
   </div>
 
-
-  <!-- TOAST NOTIFICATION CONTAINER -->
+  <!-- TOAST CONTAINER -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
+
   <!-- ========================================================================= -->
-  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <!-- JAVASCRIPT APP LOGIC -->
   <!-- ========================================================================= -->
   <script>
-    // State
+    // State Management
     let currentSection = 'BSIT - 21001';
     let seatsData = [];
     let topicsData = [];
     let assignmentsData = [];
     let seatAssignmentMode = 'random'; // 'random' or 'manual'
 
-    // Init
+    // Init on Load
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('print-date').textContent = new Date().toLocaleString();
+      startLiveClock();
       initSections();
       fetchSeatsMap();
       fetchRecords();
       fetchTopicsPool();
     });
 
-    // Tab Switching
+    // Live Clock
+    function startLiveClock() {
+      const update = () => {
+        const d = new Date();
+        const el = document.getElementById('live-clock');
+        if (el) el.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      };
+      update();
+      setInterval(update, 1000);
+    }
+
+    // Tab Navigation
     function switchTab(tabId) {
       ['picker', 'records', 'pool'].forEach(t => {
         const view = document.getElementById(`view-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
         if (t === tabId) {
           view.classList.remove('hidden');
-          btn.className = 'tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30';
+          btn.className = 'tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md shadow-brand-600/30';
         } else {
           view.classList.add('hidden');
-          btn.className = 'tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-300 hover:bg-slate-800';
+          btn.className = 'tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-surface-border/40';
         }
       });
 
@@ -873,51 +1033,54 @@
       if (tabId === 'picker') fetchSeatsMap();
     }
 
-    // Quick Toast
+    // Toast Notification System
     function showToast(message, type = 'success') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       
       const colors = {
-        success: 'bg-emerald-900/90 border-emerald-500 text-emerald-100',
-        error: 'bg-rose-900/90 border-rose-500 text-rose-100',
-        info: 'bg-indigo-900/90 border-indigo-500 text-indigo-100',
-        warning: 'bg-amber-900/90 border-amber-500 text-amber-100'
+        success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-100 shadow-glow-emerald',
+        error: 'bg-rose-950/95 border-rose-500/50 text-rose-100 shadow-glow-rose',
+        info: 'bg-brand-950/95 border-brand-500/50 text-brand-100 shadow-glow-indigo',
+        warning: 'bg-amber-950/95 border-amber-500/50 text-amber-100'
       };
 
       const icons = {
         success: 'fa-circle-check text-emerald-400',
         error: 'fa-circle-xmark text-rose-400',
-        info: 'fa-circle-info text-indigo-400',
+        info: 'fa-circle-info text-brand-400',
         warning: 'fa-triangle-exclamation text-amber-400'
       };
 
-      toast.className = `flex items-center space-x-3 px-4 py-3 rounded-2xl border shadow-xl backdrop-blur text-xs pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.className = `flex items-center space-x-3 px-4 py-3 rounded-2xl border backdrop-blur-xl text-xs pointer-events-auto transform transition-all duration-300 translate-y-3 opacity-0 ${colors[type] || colors.info}`;
       toast.innerHTML = `
         <i class="fa-solid ${icons[type] || icons.info} text-base"></i>
-        <div class="font-medium">${message}</div>
+        <div class="font-medium font-sans">${message}</div>
       `;
 
       container.appendChild(toast);
       setTimeout(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
+        toast.classList.remove('translate-y-3', 'opacity-0');
       }, 10);
 
       setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
+        toast.classList.add('opacity-0', 'translate-y-3');
         setTimeout(() => toast.remove(), 300);
       }, 4000);
     }
 
-    // Modal Helpers
+    // Modal Controls
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
     }
     function closeModal(id) {
       document.getElementById(id).classList.add('hidden');
     }
+    function openHelpModal() {
+      openModal('modal-help');
+    }
 
-    // Set Section Preset
+    // Section Controls
     function setSectionPreset(section) {
       document.getElementById('student-section').value = section;
       document.getElementById('current-section-select').value = section;
@@ -941,19 +1104,19 @@
       const inputContainer = document.getElementById('manual-seat-input-container');
 
       if (mode === 'random') {
-        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-indigo-500 bg-indigo-600/20 text-indigo-300 transition-all flex items-center justify-center';
-        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center';
+        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-brand-500 bg-brand-500/20 text-brand-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm';
+        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-semibold border border-surface-border bg-surface-input text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5';
         inputContainer.classList.add('hidden');
         document.getElementById('preferred-seat').value = '';
       } else {
-        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-indigo-500 bg-indigo-600/20 text-indigo-300 transition-all flex items-center justify-center';
-        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center';
+        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-brand-500 bg-brand-500/20 text-brand-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm';
+        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-semibold border border-surface-border bg-surface-input text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5';
         inputContainer.classList.remove('hidden');
         document.getElementById('preferred-seat').focus();
       }
     }
 
-    // Init & Refresh Section Stats
+    // Section & Pool Stats
     async function initSections() {
       try {
         const res = await fetch('/api/sections');
@@ -966,7 +1129,7 @@
     }
 
     // ==========================================
-    // SEATS MAP (50 SEATS)
+    // 50-SEAT INTERACTIVE LAB MAP
     // ==========================================
     async function fetchSeatsMap() {
       try {
@@ -976,14 +1139,20 @@
         seatsData = data.seats || [];
         
         // Update Stats Counters
-        document.getElementById('stat-available-seats').innerHTML = `${data.availableCount} <span class="text-xs font-normal text-slate-400">/ 50</span>`;
+        document.getElementById('stat-available-seats').innerHTML = `${data.availableCount} <span class="text-xs font-mono font-normal text-slate-400">/ 50</span>`;
         document.getElementById('stat-occupied-seats').textContent = data.occupiedCount;
         document.getElementById('stat-unavailable-seats').textContent = data.unavailableCount;
+
+        const occupancyPct = Math.round((data.occupiedCount / 50) * 100);
+        document.getElementById('stat-occupancy-rate').textContent = `${occupancyPct}% Lab Occupancy`;
+
+        const availablePct = Math.round((data.availableCount / 50) * 100);
+        document.getElementById('stat-available-bar').style.width = `${availablePct}%`;
 
         renderSeatsMap(seatsData);
       } catch (err) {
         console.error('Error loading seats map:', err);
-        showToast('Failed to load lab seats map.', 'error');
+        showToast('Failed to load lab workstations.', 'error');
       }
     }
 
@@ -991,27 +1160,26 @@
       const container = document.getElementById('seats-container');
       container.innerHTML = '';
 
-      // We have 5 rows: Row 0 to 4
-      // In each row: Left Wing (5 seats) + Aisle (1 slot) + Right Wing (5 seats) = 11 columns
+      // 5 rows: Left Wing (5 seats) + Center Aisle (1 col) + Right Wing (5 seats) = 11 cols
       for (let row = 0; row < 5; row++) {
         
-        // 1. Left Wing Seats for this row (5 seats: row * 5 + 1 to row * 5 + 5)
+        // 1. Left Wing Seats
         for (let col = 0; col < 5; col++) {
           const seatNum = row * 5 + col + 1;
-          const seat = seats.find(s => s.seat_number === seatNum) || { seat_number: seatNum };
+          const seat = seats.find(s => s.seat_number === seatNum) || { seat_number: seatNum, neighbors: [] };
           container.appendChild(createSeatElement(seat));
         }
 
-        // 2. Center Aisle Cell (Col 6)
+        // 2. Center Aisle Cell
         const aisle = document.createElement('div');
-        aisle.className = 'flex flex-col items-center justify-center py-2 text-[10px] text-slate-600 font-bold tracking-widest border-x border-dashed border-slate-700/50 bg-slate-900/30 rounded';
+        aisle.className = 'flex flex-col items-center justify-center py-2 text-[10px] text-slate-600 font-mono font-bold tracking-widest border-x border-dashed border-surface-border bg-surface-input/30 rounded';
         aisle.innerHTML = `<i class="fa-solid fa-arrows-up-down text-[9px] text-slate-600"></i>`;
         container.appendChild(aisle);
 
-        // 3. Right Wing Seats for this row (5 seats: 25 + row * 5 + col + 1)
+        // 3. Right Wing Seats
         for (let col = 0; col < 5; col++) {
           const seatNum = 25 + (row * 5 + col + 1);
-          const seat = seats.find(s => s.seat_number === seatNum) || { seat_number: seatNum };
+          const seat = seats.find(s => s.seat_number === seatNum) || { seat_number: seatNum, neighbors: [] };
           container.appendChild(createSeatElement(seat));
         }
       }
@@ -1020,33 +1188,38 @@
     function createSeatElement(seat) {
       const btn = document.createElement('button');
       btn.type = 'button';
+      btn.id = `seat-btn-${seat.seat_number}`;
       btn.onclick = () => inspectSeat(seat.seat_number);
+
+      // Mouseenter / Mouseleave for Anti-Cheating Halo
+      btn.onmouseenter = () => highlightNeighbors(seat.neighbors || []);
+      btn.onmouseleave = () => clearNeighborHighlights();
 
       const seatNumStr = seat.seat_number.toString().padStart(2, '0');
       let styling = '';
-      let icon = '';
+      let statusIndicator = '';
       let subtitle = '';
 
       if (seat.is_unavailable) {
-        styling = 'seat-unavailable border-rose-500/80 text-rose-300 hover:border-rose-400';
-        icon = '<i class="fa-solid fa-ban text-rose-400 text-xs"></i>';
-        subtitle = `<span class="text-[9px] font-bold text-rose-400 truncate block px-0.5">BROKEN</span>`;
+        styling = 'seat-broken-pattern border-rose-500/60 text-rose-300 hover:border-rose-400';
+        statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>';
+        subtitle = `<span class="text-[9px] font-mono font-bold text-rose-400 truncate block px-0.5">BROKEN</span>`;
       } else if (seat.is_occupied) {
-        styling = 'bg-indigo-600 border-indigo-400 text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/30';
-        icon = '<i class="fa-solid fa-user-graduate text-xs text-indigo-200"></i>';
+        styling = 'bg-brand-600/90 border-brand-400 text-white hover:bg-brand-500 shadow-md shadow-brand-600/30';
+        statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse"></span>';
         const studentFirstName = seat.occupant ? seat.occupant.student_name.split(' ')[0] : 'Taken';
-        subtitle = `<span class="text-[9px] font-bold text-indigo-100 truncate block px-0.5" title="${seat.occupant?.student_name || ''}">${studentFirstName}</span>`;
+        subtitle = `<span class="text-[9px] font-bold text-brand-100 truncate block px-0.5" title="${seat.occupant?.student_name || ''}">${escapeHtml(studentFirstName)}</span>`;
       } else {
-        styling = 'bg-slate-900/90 border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/40 hover:border-emerald-400';
-        icon = '<i class="fa-solid fa-desktop text-emerald-400/80 text-xs"></i>';
-        subtitle = `<span class="text-[9px] font-medium text-slate-400 block">Free</span>`;
+        styling = 'bg-surface-input border-emerald-500/30 text-emerald-300 hover:bg-emerald-950/30 hover:border-emerald-400';
+        statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>';
+        subtitle = `<span class="text-[9px] font-mono text-slate-400 block">Free</span>`;
       }
 
-      btn.className = `p-1.5 rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-150 transform hover:scale-105 active:scale-95 h-[62px] ${styling}`;
+      btn.className = `p-1.5 rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-150 transform hover:scale-105 active:scale-95 h-[64px] relative group ${styling}`;
       btn.innerHTML = `
         <div class="flex items-center justify-between w-full px-1">
-          <span class="text-[10px] font-black tracking-tight">${seatNumStr}</span>
-          ${icon}
+          <span class="text-[10px] font-mono font-black tracking-tight">${seatNumStr}</span>
+          ${statusIndicator}
         </div>
         ${subtitle}
       `;
@@ -1054,6 +1227,22 @@
       return btn;
     }
 
+    // Highlight adjacent neighbor halo
+    function highlightNeighbors(neighbors) {
+      if (!Array.isArray(neighbors)) return;
+      neighbors.forEach(num => {
+        const el = document.getElementById(`seat-btn-${num}`);
+        if (el) el.classList.add('neighbor-highlight');
+      });
+    }
+
+    function clearNeighborHighlights() {
+      document.querySelectorAll('.neighbor-highlight').forEach(el => {
+        el.classList.remove('neighbor-highlight');
+      });
+    }
+
+    // Inspect Workstation & View Project Description
     function inspectSeat(seatNumber) {
       const seat = seatsData.find(s => s.seat_number === seatNumber);
       if (!seat) return;
@@ -1064,94 +1253,97 @@
       const content = document.getElementById('inspect-content');
       const actions = document.getElementById('inspect-actions');
 
-      title.textContent = `Seat #${seat.seat_number}`;
+      title.textContent = `Workstation #${seat.seat_number}`;
       badge.textContent = `#${seat.seat_number}`;
 
       let contentHtml = '';
       let actionsHtml = '';
 
       if (seat.is_unavailable) {
-        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black seat-unavailable border border-rose-500 text-rose-300';
-        status.className = 'text-xs text-rose-400 font-semibold';
-        status.textContent = 'Unavailable / Out of Order';
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black seat-broken-pattern border border-rose-500 text-rose-300 font-mono';
+        status.className = 'text-xs text-rose-400 font-bold';
+        status.textContent = 'Out of Order / Broken';
 
         contentHtml = `
-          <div><strong class="text-slate-400">Reason:</strong> <span class="text-rose-300">${seat.unavailable_reason || 'Broken / Reserved Unit'}</span></div>
-          <div class="text-[11px] text-slate-500">This seat is excluded from the random student assignment pool.</div>
+          <div><strong class="text-slate-400">Status:</strong> <span class="text-rose-300 font-bold">Offline / Disabled</span></div>
+          <div><strong class="text-slate-400">Issue Note:</strong> <span class="text-rose-200">${escapeHtml(seat.unavailable_reason || 'Broken Monitor / Unit Out of Order')}</span></div>
+          <div class="text-[11px] text-slate-500 pt-1">This seat is automatically excluded from the random assignment pool.</div>
         `;
 
         actionsHtml = `
-          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, false)" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center">
-            <i class="fa-solid fa-check mr-1.5"></i> ✅ Restore to Available
+          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, false)" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-glow-emerald transition-all flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-check"></i>
+            <span>✅ Restore Workstation to Available</span>
           </button>
         `;
       } else if (seat.is_occupied && seat.occupant) {
-        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-indigo-600 border border-indigo-400 text-white shadow-md';
-        status.className = 'text-xs text-indigo-400 font-semibold';
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-brand-600 border border-brand-400 text-white shadow-md font-mono';
+        status.className = 'text-xs text-brand-400 font-bold';
         status.textContent = `Occupied in ${seat.occupant.section}`;
 
         const dateStr = seat.occupant.created_at ? new Date(seat.occupant.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Recently';
 
         contentHtml = `
-          <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+          <div class="flex items-center justify-between pb-2.5 border-b border-surface-border">
             <div>
-              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Student Name</span>
+              <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block tracking-wider">Student Name</span>
               <span class="text-sm font-black text-white">${escapeHtml(seat.occupant.student_name)}</span>
             </div>
             <div class="text-right">
-              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Section</span>
-              <span class="text-xs font-bold text-indigo-400 px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">${escapeHtml(seat.occupant.section)}</span>
+              <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block tracking-wider">Section</span>
+              <span class="text-xs font-bold text-brand-400 px-2 py-0.5 rounded-md bg-brand-500/10 border border-brand-500/20">${escapeHtml(seat.occupant.section)}</span>
             </div>
           </div>
 
           <div>
             <div class="flex items-center justify-between mt-1 mb-1">
-              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned Project / Topic</span>
+              <span class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Assigned Project / Topic</span>
               <span class="text-[10px] font-bold text-sky-300 px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20">${escapeHtml(seat.occupant.system_category || 'General')}</span>
             </div>
-            <h4 class="text-sm font-bold text-indigo-200 bg-slate-800/80 p-2.5 rounded-xl border border-indigo-500/30 mb-2">
+            <h4 class="text-sm font-extrabold text-brand-200 bg-surface-card p-3 rounded-2xl border border-brand-500/30 mb-2">
               ${escapeHtml(seat.occupant.system_name)}
             </h4>
           </div>
 
           <div>
-            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">Project Description & Requirements</span>
-            <div class="text-xs text-slate-300 bg-slate-800/90 p-3 rounded-xl border border-slate-700 whitespace-pre-line leading-relaxed max-h-52 overflow-y-auto font-sans pr-1">
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block mb-1 tracking-wider">Project Description & Requirements</span>
+            <div class="text-xs text-slate-300 bg-surface-card p-3 rounded-2xl border border-surface-border whitespace-pre-line leading-relaxed max-h-52 overflow-y-auto font-sans pr-1">
               ${escapeHtml(seat.occupant.system_description || 'No specific description provided for this topic.')}
             </div>
           </div>
 
-          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800">
+          <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-surface-border font-mono">
             <span>Assigned: ${dateStr}</span>
-            <span class="text-emerald-400 font-medium"><i class="fa-solid fa-shield-halved mr-1"></i> Anti-cheating checked</span>
+            <span class="text-emerald-400 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i> Anti-cheating checked</span>
           </div>
         `;
 
         actionsHtml = `
-          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-medium text-xs">
-            Use this Seat in Picker Form
+          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2 rounded-xl bg-surface-card hover:bg-surface-border border border-surface-border text-white font-medium text-xs">
+            Use Seat #${seat.seat_number} in Picker Form
           </button>
           <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-medium text-xs">
-            🚫 Mark as Unavailable / Broken
+            🚫 Mark Workstation as Broken
           </button>
         `;
       } else {
-        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-slate-800 border border-emerald-500 text-emerald-400';
-        status.className = 'text-xs text-emerald-400 font-semibold';
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-surface-card border border-emerald-500 text-emerald-400 font-mono';
+        status.className = 'text-xs text-emerald-400 font-bold';
         status.textContent = 'Available for Assignment';
 
         contentHtml = `
-          <div><strong class="text-slate-400">Status:</strong> <span class="text-emerald-400 font-semibold">Ready to be picked</span></div>
-          <div><strong class="text-slate-400">Wing:</strong> <span class="text-slate-300">${seat.seat_number <= 25 ? 'Left Wing' : 'Right Wing'}</span></div>
-          <div class="text-[11px] text-slate-500">No student is currently assigned to this seat.</div>
+          <div><strong class="text-slate-400">Status:</strong> <span class="text-emerald-400 font-semibold">Ready for assignment</span></div>
+          <div><strong class="text-slate-400">Wing Location:</strong> <span class="text-slate-300">${seat.seat_number <= 25 ? 'Left Wing (Seats 1-25)' : 'Right Wing (Seats 26-50)'}</span></div>
+          <div class="text-[11px] text-slate-500 pt-1">No student is currently assigned to this workstation.</div>
         `;
 
         actionsHtml = `
-          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center">
-            <i class="fa-solid fa-hand-pointer mr-1.5"></i> Select Seat #${seat.seat_number} in Picker Form
+          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-glow-indigo transition-all flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-hand-pointer"></i>
+            <span>Select Seat #${seat.seat_number} in Assignment Form</span>
           </button>
           <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-medium text-xs">
-            🚫 Mark as Unavailable / Broken
+            🚫 Mark Workstation as Broken
           </button>
         `;
       }
@@ -1166,15 +1358,15 @@
       setSeatAssignmentMode('manual');
       document.getElementById('preferred-seat').value = seatNum;
       document.getElementById('student-name').focus();
-      showToast(`Selected Seat #${seatNum} in Picker Form.`, 'info');
+      showToast(`Selected Workstation #${seatNum} in Assignment Form.`, 'info');
     }
 
     async function toggleSeatStatus(seatNumber, isUnavailable) {
       try {
         let reason = 'Unavailable / Broken';
         if (isUnavailable) {
-          const userReason = prompt(`Enter reason for marking Seat #${seatNumber} as unavailable:`, 'Broken Monitor / Unit Out of Order');
-          if (userReason === null) return; // cancelled
+          const userReason = prompt(`Enter reason for disabling Workstation #${seatNumber}:`, 'Broken Monitor / Unit Out of Order');
+          if (userReason === null) return;
           if (userReason.trim()) reason = userReason.trim();
         }
 
@@ -1236,7 +1428,7 @@
         if (!res.ok) throw new Error(data.error || 'Failed to batch update seats');
 
         closeModal('modal-batch-seats');
-        showToast(`Updated ${data.count} seats successfully!`, 'success');
+        showToast(`Updated ${data.count} workstations successfully!`, 'success');
         fetchSeatsMap();
         initSections();
       } catch (err) {
@@ -1245,7 +1437,7 @@
     }
 
     async function resetAllUnavailableSeats() {
-      if (!confirm('Are you sure you want to restore all unavailable / broken seats back to available?')) return;
+      if (!confirm('Are you sure you want to restore all 50 workstations back to available?')) return;
       try {
         const res = await fetch('/api/seats/reset-unavailable', {
           method: 'POST',
@@ -1254,7 +1446,7 @@
         });
         const data = await res.json();
         closeModal('modal-batch-seats');
-        showToast('All 50 seats restored to available.', 'success');
+        showToast('All 50 workstations restored to available.', 'success');
         fetchSeatsMap();
         initSections();
       } catch (err) {
@@ -1262,8 +1454,9 @@
       }
     }
 
+
     // ==========================================
-    // SYSTEM PICKER SUBMISSION
+    // SYSTEM PICKER SUBMISSION & ANIMATION
     // ==========================================
     async function handlePickSystem(e) {
       e.preventDefault();
@@ -1279,14 +1472,14 @@
         if (!isNaN(seatVal) && seatVal >= 1 && seatVal <= 50) {
           preferredSeatNumber = seatVal;
         } else {
-          showToast('Please enter a valid seat number between 1 and 50.', 'warning');
+          showToast('Please enter a valid workstation number (1 - 50).', 'warning');
           return;
         }
       }
 
       const pickBtn = document.getElementById('pick-btn');
       pickBtn.disabled = true;
-      pickBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> RANDOMIZING TOPIC & SEAT...';
+      pickBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg mr-2"></i> RANDOMIZING TOPIC & SEAT...';
 
       try {
         const res = await fetch('/api/pick-system', {
@@ -1306,7 +1499,6 @@
         const data = await res.json();
 
         if (res.status === 409 && data.alreadyAssigned) {
-          // Already assigned warning
           if (confirm(`Student "${studentName}" is already assigned to "${data.assignment.system_name}" at Seat #${data.assignment.seat_number}.\n\nDo you want to re-roll and overwrite this record?`)) {
             document.getElementById('allow-reroll').checked = true;
             handlePickSystem(e);
@@ -1319,16 +1511,16 @@
           throw new Error(data.error || 'Failed to pick system.');
         }
 
-        // Trigger celebratory confetti!
+        // Trigger celebratory confetti effect
         if (typeof confetti === 'function') {
           confetti({
-            particleCount: 80,
-            spread: 70,
+            particleCount: 90,
+            spread: 75,
             origin: { y: 0.6 }
           });
         }
 
-        // Show Success Result Modal
+        // Populate Success Result Modal
         const a = data.assignment;
         document.getElementById('modal-student-name').textContent = a.student_name;
         document.getElementById('modal-student-section').textContent = a.section;
@@ -1346,7 +1538,7 @@
 
         openModal('modal-success');
 
-        // Reset form inputs for next student
+        // Reset form for next student
         document.getElementById('student-name').value = '';
         if (seatAssignmentMode === 'manual') {
           document.getElementById('preferred-seat').value = '';
@@ -1360,13 +1552,13 @@
         showToast(err.message, 'error');
       } finally {
         pickBtn.disabled = false;
-        pickBtn.innerHTML = '<i class="fa-solid fa-dice text-lg mr-2"></i> 🎲 PICK RANDOM SYSTEM & SEAT';
+        pickBtn.innerHTML = '<i class="fa-solid fa-dice-d20 text-lg group-hover:rotate-180 transition-transform duration-500 mr-2"></i> <span class="tracking-wide">ROLL RANDOM SYSTEM & SEAT</span>';
       }
     }
 
 
     // ==========================================
-    // ASSIGNMENT RECORDS TAB
+    // ASSIGNMENT REGISTRY / RECORDS TAB
     // ==========================================
     let searchDebounceTimer;
     function debounceFetchRecords() {
@@ -1403,23 +1595,23 @@
 
       records.forEach(r => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/60 transition-all';
+        tr.className = 'hover:bg-surface-input/60 transition-all';
         
         const dateStr = new Date(r.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
 
         tr.innerHTML = `
-          <td class="px-4 py-3 font-bold text-emerald-400">
-            ${r.seat_number ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">Seat #${r.seat_number}</span>` : '<span class="text-slate-500">—</span>'}
+          <td class="px-4 py-3 font-mono font-bold text-emerald-400">
+            ${r.seat_number ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">#${r.seat_number}</span>` : '<span class="text-slate-500">—</span>'}
           </td>
-          <td class="px-4 py-3 font-semibold text-white">${escapeHtml(r.student_name)}</td>
-          <td class="px-4 py-3 text-indigo-300 font-medium">${escapeHtml(r.section)}</td>
+          <td class="px-4 py-3 font-bold text-white">${escapeHtml(r.student_name)}</td>
+          <td class="px-4 py-3 text-brand-300 font-medium font-mono text-xs">${escapeHtml(r.section)}</td>
           <td class="px-4 py-3 text-white font-medium">
-            <span class="hover:text-indigo-300 cursor-pointer" onclick="viewRecordDetail(${r.id})">${escapeHtml(r.system_name)}</span>
+            <span class="hover:text-brand-300 cursor-pointer transition-colors font-semibold" onclick="viewRecordDetail(${r.id})">${escapeHtml(r.system_name)}</span>
           </td>
           <td class="px-4 py-3 text-xs text-slate-400">${escapeHtml(r.system_category || 'General')}</td>
-          <td class="px-4 py-3 text-xs text-slate-400">${dateStr}</td>
+          <td class="px-4 py-3 text-xs text-slate-400 font-mono">${dateStr}</td>
           <td class="px-4 py-3 text-right space-x-1.5 no-print">
-            <button onclick="viewRecordDetail(${r.id})" class="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition-all text-xs" title="View details">
+            <button onclick="viewRecordDetail(${r.id})" class="p-1.5 rounded-lg bg-surface-card hover:bg-surface-border border border-surface-border text-slate-300 hover:text-white transition-all text-xs" title="View details">
               <i class="fa-solid fa-eye"></i>
             </button>
             <button onclick="deleteRecord(${r.id})" class="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 transition-all text-xs" title="Delete record">
@@ -1435,15 +1627,12 @@
       const rec = assignmentsData.find(a => a.id === id);
       if (!rec) return;
 
-      document.getElementById('record-detail-student').textContent = rec.student_name;
-      document.getElementById('record-detail-section').textContent = rec.section;
-      document.getElementById('record-detail-seat').textContent = rec.seat_number ? `Seat #${rec.seat_number}` : 'Unassigned';
-      document.getElementById('record-detail-cat').textContent = rec.system_category || 'General';
-      document.getElementById('record-detail-topic').textContent = rec.system_name;
-      document.getElementById('record-detail-desc').textContent = rec.system_description || 'No description provided.';
-      document.getElementById('record-detail-date').textContent = new Date(rec.created_at).toLocaleString();
-
-      openModal('modal-view-record');
+      const fakeSeat = {
+        seat_number: rec.seat_number,
+        is_occupied: true,
+        occupant: rec
+      };
+      inspectSeat(rec.seat_number);
     }
 
     async function deleteRecord(id) {
@@ -1464,9 +1653,9 @@
 
     async function confirmClearRecords() {
       const section = document.getElementById('records-section-filter').value;
-      const targetText = section === 'ALL' ? 'ALL records in all sections' : `all records in section "${section}"`;
+      const targetText = section === 'ALL' ? 'ALL records across all sections' : `all records in section "${section}"`;
 
-      if (!confirm(`⚠️ Are you sure you want to clear ${targetText}? This cannot be undone.`)) return;
+      if (!confirm(`⚠️ Are you sure you want to clear ${targetText}? This action cannot be undone.`)) return;
 
       try {
         const res = await fetch(`/api/assignments?section=${encodeURIComponent(section)}`, { method: 'DELETE' });
@@ -1487,7 +1676,7 @@
 
 
     // ==========================================
-    // TOPICS POOL MANAGEMENT TAB
+    // TOPICS POOL MANAGEMENT
     // ==========================================
     async function fetchTopicsPool() {
       try {
@@ -1508,21 +1697,21 @@
 
       topics.forEach((t, idx) => {
         const card = document.createElement('div');
-        card.className = 'bg-slate-800/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition-all group';
+        card.className = 'bg-surface-card border border-surface-border hover:border-surface-borderLight rounded-3xl p-5 shadow-card-glass flex flex-col justify-between transition-all group';
         
         card.innerHTML = `
           <div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-indigo-400">#${idx + 1}</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700 text-slate-300">${escapeHtml(t.category || 'General')}</span>
+              <span class="text-xs font-mono font-bold text-brand-400">#${(idx + 1).toString().padStart(2, '0')}</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-surface-input text-slate-300 border border-surface-border">${escapeHtml(t.category || 'General')}</span>
             </div>
-            <h3 class="text-sm font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">${escapeHtml(t.name)}</h3>
+            <h3 class="text-sm font-extrabold text-white mb-2 group-hover:text-brand-300 transition-colors">${escapeHtml(t.name)}</h3>
             <p class="text-xs text-slate-400 line-clamp-4 whitespace-pre-line leading-relaxed">${escapeHtml(t.description || 'No description provided.')}</p>
           </div>
 
-          <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs">
-            <span class="text-slate-500 text-[11px]">Picked: <strong class="text-slate-300">${t.pick_count || 0} times</strong></span>
-            <button onclick="deleteTopic(${t.id})" class="text-rose-400 hover:text-rose-300 p-1 rounded hover:bg-rose-500/10 transition-all" title="Delete Topic">
+          <div class="mt-4 pt-3 border-t border-surface-border flex items-center justify-between text-xs">
+            <span class="text-slate-500 font-mono text-[11px]">Picked: <strong class="text-slate-300">${t.pick_count || 0} times</strong></span>
+            <button onclick="deleteTopic(${t.id})" class="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 transition-all" title="Delete Topic">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
@@ -1580,7 +1769,6 @@
     function toggleExportMenu() {
       document.getElementById('export-menu').classList.toggle('hidden');
     }
-    // Close export menu when clicking outside
     document.addEventListener('click', (e) => {
       const container = document.getElementById('export-dropdown-container');
       if (container && !container.contains(e.target)) {
@@ -1652,7 +1840,7 @@
       }
     }
 
-    // Helper: Escape HTML
+    // Helper: Escape HTML string
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
