@@ -5,10 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🎲 LabQuest — Student Random System & 50-Seat Picker</title>
   
-  <!-- Fonts: Inter & Plus Jakarta Sans & JetBrains Mono -->
+  <!-- Early Theme Init to prevent Flash of Unstyled Theme (FOUC) -->
+  <script>
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.remove('light');
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -30,46 +46,37 @@
           },
           colors: {
             brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              200: '#c7d2fe',
-              300: '#a5b4fc',
-              400: '#818cf8',
+              50: '#f5f7ff',
+              100: '#ebf0fe',
+              200: '#ced9fd',
+              300: '#a1b7fc',
+              400: '#708df8',
               500: '#6366f1',
               600: '#4f46e5',
               700: '#4338ca',
               800: '#3730a3',
               900: '#312e81',
               950: '#1e1b4b'
-            },
-            surface: {
-              base: '#0B0F19',
-              card: '#111827',
-              cardHover: '#172033',
-              border: '#1F293D',
-              borderLight: '#2A3750',
-              input: '#0d1322'
             }
           },
-          boxShadow: {
-            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.35)',
-            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.35)',
-            'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.35)',
-            'card-glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
-          },
           animation: {
-            'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'float': 'float 4s ease-in-out infinite',
-            'shimmer': 'shimmer 2s linear infinite'
+            'aurora-slow': 'aurora 18s ease-in-out infinite alternate',
+            'float-slow': 'float 8s ease-in-out infinite alternate',
+            'pulse-glow': 'pulseGlow 3s ease-in-out infinite'
           },
           keyframes: {
-            float: {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-6px)' }
+            aurora: {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '50%': { transform: 'translate(40px, -30px) scale(1.15)' },
+              '100%': { transform: 'translate(-30px, 25px) scale(0.95)' }
             },
-            shimmer: {
-              '0%': { backgroundPosition: '-200% 0' },
-              '100%': { backgroundPosition: '200% 0' }
+            float: {
+              '0%': { transform: 'translateY(0px)' },
+              '100%': { transform: 'translateY(-12px)' }
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: 0.4 },
+              '50%': { opacity: 0.8 }
             }
           }
         }
@@ -78,40 +85,114 @@
   </script>
 
   <style>
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0B0F19;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #1F293D;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #374151;
+    /* Theme Tokens */
+    :root.dark {
+      --bg-main: #080C16;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --glass-bg: rgba(255, 255, 255, 0.04);
+      --glass-bg-hover: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-border-light: rgba(255, 255, 255, 0.22);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --glass-input-bg: rgba(0, 0, 0, 0.35);
+      --glass-input-border: rgba(255, 255, 255, 0.12);
+      --glass-panel-elevated-bg: rgba(255, 255, 255, 0.06);
     }
 
-    /* Seat Broken Stripes */
-    .seat-broken-pattern {
+    :root.light {
+      --bg-main: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-bg-hover: rgba(255, 255, 255, 0.9);
+      --glass-border: rgba(255, 255, 255, 0.85);
+      --glass-border-light: rgba(255, 255, 255, 0.95);
+      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      --glass-input-bg: rgba(255, 255, 255, 0.9);
+      --glass-input-border: rgba(203, 213, 225, 0.85);
+      --glass-panel-elevated-bg: rgba(255, 255, 255, 0.85);
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Glass Panels */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .glass-panel-elevated {
+      background: var(--glass-panel-elevated-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border-light);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .dark .glass-panel-elevated {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dark .glass-card {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .glass-card:hover {
+      background: var(--glass-bg-hover);
+      border-color: var(--glass-border-light);
+      transform: translateY(-2px);
+    }
+
+    .glass-input {
+      background: var(--glass-input-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-input-border);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus {
+      border-color: rgba(99, 102, 241, 0.8);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Broken Seat Stripes */
+    .glass-seat-broken {
       background: repeating-linear-gradient(
         -45deg,
         rgba(244, 63, 94, 0.08),
-        rgba(244, 63, 94, 0.08) 8px,
-        rgba(244, 63, 94, 0.18) 8px,
-        rgba(244, 63, 94, 0.18) 16px
+        rgba(244, 63, 94, 0.08) 6px,
+        rgba(244, 63, 94, 0.2) 6px,
+        rgba(244, 63, 94, 0.2) 12px
       );
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(244, 63, 94, 0.45);
     }
 
-    /* Neighbor highlight halo */
+    /* Neighbor Halo Animation */
     .neighbor-highlight {
       outline: 2px dashed #f59e0b !important;
-      outline-offset: 2px;
-      box-shadow: 0 0 16px rgba(245, 158, 11, 0.45) !important;
-      transform: scale(1.05);
-      z-index: 20;
+      outline-offset: 3px;
+      box-shadow: 0 0 24px rgba(245, 158, 11, 0.55), inset 0 0 12px rgba(245, 158, 11, 0.2) !important;
+      transform: scale(1.06);
+      z-index: 25;
     }
 
     /* Print Styles */
@@ -126,10 +207,11 @@
       .print-only {
         display: block !important;
       }
-      .print-card {
+      .glass-panel, .glass-card, .glass-panel-elevated {
+        background: white !important;
         border: 1px solid #cbd5e1 !important;
         box-shadow: none !important;
-        page-break-inside: avoid;
+        backdrop-filter: none !important;
       }
     }
     .print-only {
@@ -137,65 +219,94 @@
     }
   </style>
 </head>
-<body class="bg-surface-base text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white flex flex-col justify-between">
+<body class="min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white flex flex-col justify-between relative overflow-x-hidden">
 
   <!-- ========================================================================= -->
-  <!-- TOP NAVIGATION HEADER -->
+  <!-- GLASSO-MORPHIC AURORA BACKGROUND LIGHT ORBS -->
   <!-- ========================================================================= -->
-  <header class="border-b border-surface-border bg-surface-base/85 backdrop-blur-xl sticky top-0 z-40 no-print transition-all">
+  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+    <!-- Indigo Aurora Orb -->
+    <div class="absolute -top-32 -left-20 w-[550px] h-[550px] bg-indigo-600/20 dark:bg-indigo-600/20 bg-indigo-400/25 rounded-full blur-[120px] animate-aurora-slow"></div>
+    <!-- Cyan Aurora Orb -->
+    <div class="absolute top-[25%] -right-32 w-[600px] h-[600px] bg-cyan-500/15 dark:bg-cyan-500/15 bg-cyan-400/20 rounded-full blur-[140px] animate-aurora-slow" style="animation-delay: -5s;"></div>
+    <!-- Purple Aurora Orb -->
+    <div class="absolute -bottom-40 left-[20%] w-[650px] h-[650px] bg-purple-600/15 dark:bg-purple-600/15 bg-purple-400/20 rounded-full blur-[150px] animate-aurora-slow" style="animation-delay: -10s;"></div>
+    <!-- Emerald Ambient Orb -->
+    <div class="absolute top-[60%] left-[60%] w-[450px] h-[450px] bg-emerald-500/10 dark:bg-emerald-500/10 bg-emerald-400/15 rounded-full blur-[130px] animate-float-slow"></div>
+    
+    <!-- Grid Mesh Overlay -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TOP FROSTED GLASS NAVIGATION BAR -->
+  <!-- ========================================================================= -->
+  <header class="border-b border-slate-200/80 dark:border-white/[0.08] bg-white/70 dark:bg-[#080C16]/65 backdrop-blur-2xl sticky top-0 z-40 no-print transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         
-        <!-- Brand & App Identity -->
+        <!-- App Brand Identity -->
         <div class="flex items-center space-x-3.5">
           <div class="relative group">
-            <div class="absolute -inset-0.5 bg-gradient-to-r from-brand-500 to-purple-600 rounded-xl blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
-            <div class="relative h-10 w-10 rounded-xl bg-surface-card border border-brand-500/40 flex items-center justify-center text-brand-400 text-lg shadow-lg">
-              <i class="fa-solid fa-cube"></i>
+            <div class="absolute -inset-1 bg-gradient-to-r from-brand-500 via-purple-500 to-cyan-400 rounded-2xl blur-md opacity-70 group-hover:opacity-100 transition duration-300"></div>
+            <div class="relative h-10 w-10 rounded-2xl bg-white/80 dark:bg-white/[0.08] backdrop-blur-xl border border-slate-200 dark:border-white/25 flex items-center justify-center text-brand-600 dark:text-white text-lg shadow-sm">
+              <i class="fa-solid fa-cube text-brand-600 dark:text-brand-300"></i>
             </div>
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <h1 class="text-base sm:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-brand-300 bg-clip-text text-transparent">
+              <h1 class="text-base sm:text-lg font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-700 dark:from-white dark:via-slate-100 dark:to-indigo-200 bg-clip-text text-transparent">
                 SeatPicker Pro
               </h1>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/10 text-brand-400 border border-brand-500/30">
-                v2.0 LAB
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/10 text-brand-600 dark:bg-white/[0.08] dark:text-brand-300 border border-brand-500/20 dark:border-white/15 backdrop-blur-md shadow-sm">
+                GLASS EDITION
               </span>
             </div>
-            <p class="text-[11px] text-slate-400 font-medium flex items-center">
-              <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-              Anti-Cheating Lab Assignment System
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 mr-1.5 animate-pulse"></span>
+              Anti-Cheating Lab Assignment & Workstation Studio
             </p>
           </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="flex items-center space-x-1.5 bg-surface-card/90 p-1 rounded-xl border border-surface-border shadow-inner">
-          <button onclick="switchTab('picker')" id="tab-btn-picker" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md shadow-brand-600/30">
+        <!-- Glass Navigation Pill Tabs -->
+        <nav class="flex items-center space-x-1.5 bg-slate-200/50 dark:bg-white/[0.04] backdrop-blur-xl p-1 rounded-2xl border border-slate-300/60 dark:border-white/[0.1] shadow-sm">
+          <button onclick="switchTab('picker')" id="tab-btn-picker" class="tab-btn flex items-center space-x-2 px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-brand-600 to-purple-600 text-white border border-white/20 shadow-[0_0_20px_rgba(99,102,241,0.4)]">
             <i class="fa-solid fa-dice text-sm"></i>
-            <span class="hidden sm:inline">Picker & Map</span>
+            <span class="hidden sm:inline">Picker & Lab Map</span>
           </button>
-          <button onclick="switchTab('records')" id="tab-btn-records" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-surface-border/40">
+          <button onclick="switchTab('records')" id="tab-btn-records" class="tab-btn flex items-center space-x-2 px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.06]">
             <i class="fa-solid fa-list-check text-sm"></i>
             <span class="hidden sm:inline">Assignments</span>
-            <span id="nav-count-records" class="px-1.5 py-0.2 rounded-md bg-surface-border text-[10px] font-mono font-bold text-slate-300">0</span>
+            <span id="nav-count-records" class="px-1.5 py-0.2 rounded-md bg-white/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300">0</span>
           </button>
-          <button onclick="switchTab('pool')" id="tab-btn-pool" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-surface-border/40">
+          <button onclick="switchTab('pool')" id="tab-btn-pool" class="tab-btn flex items-center space-x-2 px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.06]">
             <i class="fa-solid fa-layer-group text-sm"></i>
             <span class="hidden sm:inline">Topic Pool</span>
-            <span id="nav-count-pool" class="px-1.5 py-0.2 rounded-md bg-surface-border text-[10px] font-mono font-bold text-slate-300">0</span>
+            <span id="nav-count-pool" class="px-1.5 py-0.2 rounded-md bg-white/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300">0</span>
           </button>
         </nav>
 
-        <!-- Right System Clock & Quick Help -->
-        <div class="hidden md:flex items-center space-x-3 text-xs text-slate-400">
-          <div class="flex items-center space-x-1.5 font-mono px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border">
-            <i class="fa-regular fa-clock text-brand-400 text-[11px]"></i>
+        <!-- Right Controls: Theme Toggle & Clock & Help -->
+        <div class="flex items-center space-x-2 sm:space-x-3 text-xs text-slate-400">
+          
+          <!-- LIGHT / DARK MODE TOGGLE BUTTON -->
+          <button onclick="toggleTheme()" id="theme-toggle-btn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl glass-card text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-brand-400 transition-all cursor-pointer shadow-sm" title="Toggle Light / Dark Mode">
+            <span id="theme-icon-container">
+              <i class="fa-solid fa-moon text-brand-300"></i>
+            </span>
+            <span id="theme-text" class="hidden md:inline">Dark</span>
+          </button>
+
+          <!-- Live Clock -->
+          <div class="hidden lg:flex items-center space-x-2 font-mono px-3 py-1.5 rounded-xl glass-card text-slate-700 dark:text-slate-300 font-semibold shadow-sm">
+            <i class="fa-regular fa-clock text-brand-500 dark:text-brand-400 text-xs"></i>
             <span id="live-clock">--:--:--</span>
           </div>
-          <button onclick="openHelpModal()" class="p-2 rounded-lg bg-surface-card hover:bg-surface-border text-slate-400 hover:text-white transition-all border border-surface-border" title="Quick Guide & Anti-Cheating Rules">
-            <i class="fa-regular fa-circle-question"></i>
+
+          <!-- Help Button -->
+          <button onclick="openHelpModal()" class="p-2 rounded-xl glass-card text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm" title="Anti-Cheating Rules">
+            <i class="fa-regular fa-circle-question text-sm"></i>
           </button>
         </div>
 
@@ -213,216 +324,214 @@
     <!-- ========================================================================= -->
     <div id="view-picker" class="space-y-6">
       
-      <!-- Top Metrics & Section Selector Bar -->
+      <!-- Top Metrics & Section Selector Glass Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         <!-- 1. Section Selector Card -->
-        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex flex-col justify-between hover:border-surface-borderLight transition-all relative overflow-hidden group">
+        <div class="glass-card rounded-3xl p-4 flex flex-col justify-between relative overflow-hidden group">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">Active Lab Section</span>
-            <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+            <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Lab Section</span>
+            <span class="w-2 h-2 rounded-full bg-brand-500 dark:bg-brand-400 animate-pulse"></span>
           </div>
           <div class="relative">
-            <select id="current-section-select" onchange="onSectionChange(this.value)" class="w-full bg-surface-input border border-surface-border text-white font-bold rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all cursor-pointer">
-              <option value="BSIT - 21001">BSIT - 21001</option>
-              <option value="BSIT - 21002">BSIT - 21002</option>
-              <option value="BSIT - 21003">BSIT - 21003</option>
-              <option value="BSIT - 21007">BSIT - 21007</option>
-              <option value="BSIT - 21008">BSIT - 21008</option>
-              <option value="BSIT - 21009">BSIT - 21009</option>
-              <option value="ALL">All Sections (Overview)</option>
+            <select id="current-section-select" onchange="onSectionChange(this.value)" class="w-full glass-input font-bold rounded-2xl px-3.5 py-2 text-sm focus:outline-none cursor-pointer">
+              <option value="BSIT - 21001" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21001</option>
+              <option value="BSIT - 21002" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21002</option>
+              <option value="BSIT - 21003" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21003</option>
+              <option value="BSIT - 21007" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21007</option>
+              <option value="BSIT - 21008" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21008</option>
+              <option value="BSIT - 21009" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21009</option>
+              <option value="ALL" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Sections (Overview)</option>
             </select>
           </div>
         </div>
 
         <!-- 2. Available Seats Stat -->
-        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex items-center justify-between hover:border-emerald-500/40 transition-all group">
+        <div class="glass-card rounded-3xl p-4 flex items-center justify-between group">
           <div>
-            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">Available Workstations</p>
-            <h3 id="stat-available-seats" class="text-2xl sm:text-3xl font-black text-white mt-0.5 tracking-tight">50 <span class="text-xs font-mono font-normal text-slate-400">/ 50</span></h3>
-            <div class="w-24 h-1.5 bg-surface-border rounded-full mt-2 overflow-hidden">
-              <div id="stat-available-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 100%;"></div>
+            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Available Units</p>
+            <h3 id="stat-available-seats" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">50 <span class="text-xs font-mono font-normal text-slate-500 dark:text-slate-400">/ 50</span></h3>
+            <div class="w-24 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
+              <div id="stat-available-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500" style="width: 100%;"></div>
             </div>
           </div>
-          <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/20 group-hover:scale-105 transition-all">
+          <div class="h-12 w-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-xl border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)] group-hover:scale-105 transition-all">
             <i class="fa-solid fa-desktop"></i>
           </div>
         </div>
 
         <!-- 3. Occupied Seats Stat -->
-        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex items-center justify-between hover:border-brand-500/40 transition-all group">
+        <div class="glass-card rounded-3xl p-4 flex items-center justify-between group">
           <div>
-            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-brand-400">Assigned Students</p>
-            <h3 id="stat-occupied-seats" class="text-2xl sm:text-3xl font-black text-white mt-0.5 tracking-tight">0</h3>
-            <span id="stat-occupancy-rate" class="text-[10px] font-mono text-slate-400 block mt-1.5">0% Lab Occupancy</span>
+            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-brand-600 dark:text-brand-300">Assigned Students</p>
+            <h3 id="stat-occupied-seats" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">0</h3>
+            <span id="stat-occupancy-rate" class="text-[10px] font-mono text-slate-500 dark:text-slate-400 block mt-1.5">0% Lab Occupancy</span>
           </div>
-          <div class="h-12 w-12 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center text-xl border border-brand-500/20 group-hover:scale-105 transition-all">
+          <div class="h-12 w-12 rounded-2xl bg-brand-500/15 text-brand-600 dark:text-brand-300 flex items-center justify-center text-xl border border-brand-500/30 shadow-[0_0_20px_rgba(99,102,241,0.2)] group-hover:scale-105 transition-all">
             <i class="fa-solid fa-user-graduate"></i>
           </div>
         </div>
 
         <!-- 4. Unavailable Seats Stat -->
-        <div class="bg-surface-card border border-surface-border rounded-2xl p-4 flex items-center justify-between hover:border-rose-500/40 transition-all group">
+        <div class="glass-card rounded-3xl p-4 flex items-center justify-between group">
           <div>
-            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-400">Out of Order / Broken</p>
-            <h3 id="stat-unavailable-seats" class="text-2xl sm:text-3xl font-black text-white mt-0.5 tracking-tight">0</h3>
-            <span class="text-[10px] font-mono text-slate-400 block mt-1.5">Skipped by Picker</span>
+            <p class="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Broken / Offline</p>
+            <h3 id="stat-unavailable-seats" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">0</h3>
+            <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 block mt-1.5">Excluded by Generator</span>
           </div>
-          <div class="h-12 w-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl border border-rose-500/20 group-hover:scale-105 transition-all">
+          <div class="h-12 w-12 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-300 flex items-center justify-center text-xl border border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.2)] group-hover:scale-105 transition-all">
             <i class="fa-solid fa-wrench"></i>
           </div>
         </div>
 
       </div>
 
-      <!-- Main Layout: 2 Columns (Left: Generator Station | Right: Interactive 50-Seat Lab Canvas) -->
+      <!-- Main Two Column Grid: Generator Station & Visual Lab Canvas -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <!-- ======================= LEFT: PICKER STATION ======================= -->
+        <!-- ======================= LEFT: FROSTED GENERATOR STATION ======================= -->
         <div class="lg:col-span-4 space-y-4">
-          <div class="bg-surface-card border border-surface-border rounded-3xl p-5 sm:p-6 shadow-card-glass relative overflow-hidden">
-            <!-- Subtle ambient glow in background -->
-            <div class="absolute -top-20 -right-20 w-44 h-44 bg-brand-600/15 rounded-full blur-3xl pointer-events-none"></div>
-
+          <div class="glass-panel-elevated rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+            
             <!-- Card Header -->
             <div class="flex items-center space-x-3 mb-5">
-              <div class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white text-base shadow-md shadow-brand-600/30">
+              <div class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-base shadow-md border border-white/20">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
               </div>
               <div>
-                <h2 class="text-base font-bold text-white tracking-tight">Assignment Station</h2>
-                <p class="text-xs text-slate-400">Pick randomized project & workstation</p>
+                <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">Assignment Station</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Randomize project & workstation</p>
               </div>
             </div>
 
-            <!-- Picker Form -->
+            <!-- Form -->
             <form id="picker-form" onsubmit="handlePickSystem(event)" class="space-y-4">
               
-              <!-- Student Name Input -->
+              <!-- Student Name -->
               <div>
-                <label for="student-name" class="flex items-center justify-between text-xs font-semibold text-slate-300 mb-1.5">
-                  <span>Student Full Name <span class="text-rose-400">*</span></span>
-                  <span class="text-[10px] text-slate-500 font-mono">Press ENTER to pick</span>
+                <label for="student-name" class="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <span>Student Full Name <span class="text-rose-500">*</span></span>
+                  <span class="text-[10px] text-slate-500 font-mono">Press ENTER</span>
                 </label>
                 <div class="relative">
                   <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <i class="fa-solid fa-id-badge text-sm"></i>
                   </div>
                   <input type="text" id="student-name" required placeholder="e.g., Juan Dela Cruz" autocomplete="off"
-                    class="w-full bg-surface-input border border-surface-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all font-medium">
+                    class="w-full glass-input rounded-2xl pl-10 pr-4 py-2.5 text-sm placeholder-slate-400 focus:outline-none font-medium">
                 </div>
               </div>
 
-              <!-- Section Input & Preset Chips -->
+              <!-- Section & Preset Chips -->
               <div>
                 <div class="flex items-center justify-between mb-1.5">
-                  <label for="student-section" class="text-xs font-semibold text-slate-300">
-                    Section Code <span class="text-rose-400">*</span>
+                  <label for="student-section" class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Section Code <span class="text-rose-500">*</span>
                   </label>
-                  <span class="text-[10px] font-mono text-slate-400">Presets</span>
+                  <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400">Quick Presets</span>
                 </div>
                 <input type="text" id="student-section" required value="BSIT - 21001" placeholder="e.g., BSIT - 21001" 
-                  class="w-full bg-surface-input border border-surface-border rounded-xl px-3.5 py-2 text-sm text-white font-bold focus:outline-none focus:ring-2 focus:ring-brand-500 mb-2 transition-all">
+                  class="w-full glass-input rounded-2xl px-3.5 py-2 text-sm font-bold focus:outline-none mb-2">
                 
-                <!-- Quick Preset Chips -->
+                <!-- Chips -->
                 <div class="grid grid-cols-3 gap-1.5">
-                  <button type="button" onclick="setSectionPreset('BSIT - 21001')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21001</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21002')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21002</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21003')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21003</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21007')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21007</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21008')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21008</button>
-                  <button type="button" onclick="setSectionPreset('BSIT - 21009')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-surface-input border border-surface-border hover:border-brand-500 hover:text-brand-300 text-slate-300 transition-all text-center">21009</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21001')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-500/20 text-slate-700 dark:text-slate-300 transition-all text-center">21001</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21002')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-500/20 text-slate-700 dark:text-slate-300 transition-all text-center">21002</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21003')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-500/20 text-slate-700 dark:text-slate-300 transition-all text-center">21003</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21007')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-500/20 text-slate-700 dark:text-slate-300 transition-all text-center">21007</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21008')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-500/20 text-slate-700 dark:text-slate-300 transition-all text-center">21008</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21009')" class="px-2 py-1 text-[11px] font-mono font-semibold rounded-xl bg-white/60 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 hover:border-brand-500 hover:bg-brand-500/20 text-slate-700 dark:text-slate-300 transition-all text-center">21009</button>
                 </div>
               </div>
 
-              <!-- Seat Assignment Mode (Auto Random vs Specific) -->
+              <!-- Seat Assignment Mode -->
               <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Seat Allocation Strategy
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Workstation Assignment Strategy
                 </label>
                 <div class="grid grid-cols-2 gap-2">
-                  <button type="button" id="seat-mode-random-btn" onclick="setSeatAssignmentMode('random')" class="px-3 py-2 rounded-xl text-xs font-bold border border-brand-500 bg-brand-500/20 text-brand-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm">
+                  <button type="button" id="seat-mode-random-btn" onclick="setSeatAssignmentMode('random')" class="px-3 py-2 rounded-2xl text-xs font-bold border border-brand-500 dark:border-brand-400/60 bg-brand-500/15 dark:bg-brand-500/25 text-brand-700 dark:text-white backdrop-blur-md transition-all flex items-center justify-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-shuffle text-[11px]"></i>
                     <span>Auto Random (1-50)</span>
                   </button>
-                  <button type="button" id="seat-mode-manual-btn" onclick="setSeatAssignmentMode('manual')" class="px-3 py-2 rounded-xl text-xs font-semibold border border-surface-border bg-surface-input text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5">
+                  <button type="button" id="seat-mode-manual-btn" onclick="setSeatAssignmentMode('manual')" class="px-3 py-2 rounded-2xl text-xs font-semibold border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5">
                     <i class="fa-solid fa-hand-pointer text-[11px]"></i>
-                    <span>Manual Seat</span>
+                    <span>Manual Pick</span>
                   </button>
                 </div>
                 <div id="manual-seat-input-container" class="hidden mt-2">
                   <div class="relative">
                     <input type="number" id="preferred-seat" min="1" max="50" placeholder="Enter seat number (1 - 50)"
-                      class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                      class="w-full glass-input rounded-2xl px-4 py-2 text-sm font-mono font-bold focus:outline-none">
                     <span class="absolute right-3 top-2.5 text-xs text-slate-500">Units 1–50</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Anti-Cheating & Randomization Options -->
-              <div class="pt-3 border-t border-surface-border space-y-2.5">
-                <span class="block text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Anti-Cheating Guardrails</span>
+              <!-- Anti-Cheating & Randomization Controls -->
+              <div class="pt-3 border-t border-slate-200/80 dark:border-white/10 space-y-2.5">
+                <span class="block text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Anti-Cheating Safeguards</span>
 
-                <!-- 1. Adjacent Restriction (Anti-cheating) -->
-                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-2xl bg-surface-input/80 border border-surface-border hover:border-surface-borderLight transition-all">
-                  <input type="checkbox" id="avoid-adjacent" checked class="mt-0.5 rounded bg-surface-card border-slate-700 text-brand-600 focus:ring-brand-500 h-4 w-4">
+                <!-- Adjacent Protection -->
+                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-2xl bg-white/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 hover:border-brand-500 dark:hover:border-white/20 transition-all">
+                  <input type="checkbox" id="avoid-adjacent" checked class="mt-0.5 rounded bg-white dark:bg-black/40 border-slate-300 dark:border-white/20 text-brand-600 focus:ring-brand-500 h-4 w-4">
                   <div class="flex-1">
                     <div class="flex items-center justify-between">
-                      <span class="text-xs font-bold text-white flex items-center">
-                        <i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5 text-xs"></i>
+                      <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center">
+                        <i class="fa-solid fa-shield-halved text-emerald-500 dark:text-emerald-400 mr-1.5 text-xs"></i>
                         Adjacent Seat Protection
                       </span>
-                      <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">Active</span>
+                      <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">Active</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">Disallows same project in 8 surrounding neighbor seats (Front, Back, Left, Right & Diagonals).</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">Excludes identical topics from 8 surrounding neighbor workstations.</p>
                   </div>
                 </label>
 
-                <!-- 2. Avoid Duplicate in Entire Section -->
-                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-2xl bg-surface-input/80 border border-surface-border hover:border-surface-borderLight transition-all">
-                  <input type="checkbox" id="avoid-duplicate-section" class="mt-0.5 rounded bg-surface-card border-slate-700 text-brand-600 focus:ring-brand-500 h-4 w-4">
+                <!-- Section Unique -->
+                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-2xl bg-white/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 hover:border-brand-500 dark:hover:border-white/20 transition-all">
+                  <input type="checkbox" id="avoid-duplicate-section" class="mt-0.5 rounded bg-white dark:bg-black/40 border-slate-300 dark:border-white/20 text-brand-600 focus:ring-brand-500 h-4 w-4">
                   <div class="flex-1">
-                    <span class="text-xs font-bold text-white flex items-center">
-                      <i class="fa-solid fa-repeat text-sky-400 mr-1.5 text-xs"></i>
-                      Unique Project Per Section
+                    <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center">
+                      <i class="fa-solid fa-repeat text-cyan-600 dark:text-cyan-400 mr-1.5 text-xs"></i>
+                      Unique Topic Per Section
                     </span>
-                    <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">Ensures no two students in this section receive identical topics (pool size permitting).</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">Guarantees no two students in this section share the same topic.</p>
                   </div>
                 </label>
 
-                <!-- 3. Allow Re-roll -->
-                <label class="flex items-center space-x-2.5 cursor-pointer px-2 py-1 text-xs text-slate-400 hover:text-slate-300">
-                  <input type="checkbox" id="allow-reroll" class="rounded bg-surface-card border-slate-700 text-brand-600 focus:ring-brand-500 h-3.5 w-3.5">
-                  <span>Allow Re-roll if student is already assigned</span>
+                <!-- Re-roll -->
+                <label class="flex items-center space-x-2.5 cursor-pointer px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300">
+                  <input type="checkbox" id="allow-reroll" class="rounded bg-white dark:bg-black/40 border-slate-300 dark:border-white/20 text-brand-600 focus:ring-brand-500 h-3.5 w-3.5">
+                  <span>Allow Re-roll if student already has a record</span>
                 </label>
               </div>
 
-              <!-- BIG ROLL BUTTON -->
-              <button type="submit" id="pick-btn" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-extrabold text-sm shadow-glow-indigo transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2 group">
+              <!-- BIG FROSTED ACTION BUTTON -->
+              <button type="submit" id="pick-btn" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-extrabold text-sm backdrop-blur-md border border-white/25 shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2 group cursor-pointer">
                 <i class="fa-solid fa-dice-d20 text-lg group-hover:rotate-180 transition-transform duration-500"></i>
                 <span class="tracking-wide">ROLL RANDOM SYSTEM & SEAT</span>
               </button>
             </form>
           </div>
 
-          <!-- Quick Lab Legend Card -->
-          <div class="bg-surface-card border border-surface-border rounded-2xl p-4 text-xs text-slate-400 space-y-2.5">
-            <div class="flex items-center justify-between font-mono font-bold text-[10px] uppercase text-slate-400">
-              <span>Workstation Map Legend</span>
-              <span>Click seat to inspect</span>
+          <!-- Workstation Legend Card -->
+          <div class="glass-panel rounded-3xl p-4 text-xs space-y-2.5">
+            <div class="flex items-center justify-between font-mono font-bold text-[10px] uppercase text-slate-500 dark:text-slate-400">
+              <span>Workstation State Legend</span>
+              <span>Click to inspect</span>
             </div>
             <div class="grid grid-cols-3 gap-2 text-[11px]">
-              <div class="flex items-center space-x-1.5 p-1.5 rounded-lg bg-surface-input border border-surface-border">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                <span class="text-slate-300 font-medium">Available</span>
+              <div class="flex items-center space-x-1.5 p-2 rounded-xl bg-emerald-500/[0.1] border border-emerald-500/20">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+                <span class="text-slate-700 dark:text-slate-200 font-medium">Available</span>
               </div>
-              <div class="flex items-center space-x-1.5 p-1.5 rounded-lg bg-surface-input border border-surface-border">
-                <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
-                <span class="text-slate-300 font-medium">Assigned</span>
+              <div class="flex items-center space-x-1.5 p-2 rounded-xl bg-indigo-500/[0.12] border border-indigo-500/30">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-500 dark:bg-cyan-300 shadow-[0_0_8px_rgba(99,102,241,0.6)]"></span>
+                <span class="text-slate-700 dark:text-slate-200 font-medium">Assigned</span>
               </div>
-              <div class="flex items-center space-x-1.5 p-1.5 rounded-lg bg-surface-input border border-surface-border">
-                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                <span class="text-slate-300 font-medium">Broken</span>
+              <div class="flex items-center space-x-1.5 p-2 rounded-xl bg-rose-500/[0.1] border border-rose-500/20">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 dark:bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></span>
+                <span class="text-slate-700 dark:text-slate-200 font-medium">Broken</span>
               </div>
             </div>
           </div>
@@ -430,61 +539,61 @@
 
         <!-- ======================= RIGHT: 50-SEAT INTERACTIVE LAB ======================= -->
         <div class="lg:col-span-8">
-          <div class="bg-surface-card border border-surface-border rounded-3xl p-5 sm:p-6 shadow-card-glass space-y-4">
+          <div class="glass-panel-elevated rounded-3xl p-5 sm:p-6 space-y-4">
             
-            <!-- Lab Canvas Header Controls -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-border">
+            <!-- Header Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-white/10">
               <div>
-                <h2 class="text-base font-extrabold text-white flex items-center tracking-tight">
-                  <i class="fa-solid fa-network-wired text-brand-400 mr-2"></i> Computer Laboratory 50-Seat Grid
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center tracking-tight">
+                  <i class="fa-solid fa-network-wired text-brand-600 dark:text-brand-300 mr-2"></i> Computer Laboratory 50-Seat Grid
                 </h2>
-                <p class="text-xs text-slate-400">Interactive live layout with center aisle walkway</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Interactive live workstation map with center aisle</p>
               </div>
 
               <!-- Action Bar -->
               <div class="flex items-center space-x-2">
-                <button type="button" onclick="openBatchUnavailableModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-bold transition-all flex items-center space-x-1.5">
+                <button type="button" onclick="openBatchUnavailableModal()" class="px-3.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 text-xs font-bold transition-all flex items-center space-x-1.5 backdrop-blur-md shadow-sm cursor-pointer">
                   <i class="fa-solid fa-wrench text-[11px]"></i>
                   <span>Manage Broken Units</span>
                 </button>
-                <button type="button" onclick="fetchSeatsMap()" title="Refresh Lab Workstations" class="p-2 rounded-xl bg-surface-input border border-surface-border text-slate-400 hover:text-white hover:border-brand-500 transition-all">
+                <button type="button" onclick="fetchSeatsMap()" title="Refresh Workstations" class="p-2 rounded-xl bg-white/60 dark:bg-white/[0.05] hover:bg-white dark:hover:bg-white/[0.1] border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 transition-all backdrop-blur-md shadow-sm cursor-pointer">
                   <i class="fa-solid fa-arrows-rotate text-xs"></i>
                 </button>
               </div>
             </div>
 
-            <!-- Instructor Podium & Whiteboard (Front of Room) -->
-            <div class="relative py-2.5 px-4 rounded-2xl bg-gradient-to-r from-surface-input via-surface-border/40 to-surface-input border border-surface-border text-center overflow-hidden">
+            <!-- Instructor Podium Banner -->
+            <div class="relative py-2.5 px-4 rounded-2xl bg-gradient-to-r from-slate-200/60 via-slate-100 to-slate-200/60 dark:from-white/[0.02] dark:via-white/[0.08] dark:to-white/[0.02] border border-slate-300 dark:border-white/15 text-center overflow-hidden backdrop-blur-lg">
               <div class="flex items-center justify-center space-x-2">
-                <span class="inline-block w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
-                <span class="text-[11px] font-mono font-bold uppercase tracking-widest text-slate-300">
+                <span class="inline-block w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-ping"></span>
+                <span class="text-[11px] font-mono font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200">
                   🖥️ INSTRUCTOR PODIUM & PROJECTOR SCREEN (FRONT)
                 </span>
               </div>
             </div>
 
-            <!-- 50 SEATS GRID (Left Wing 5x5 + Center Aisle + Right Wing 5x5) -->
+            <!-- 50 SEATS GRID -->
             <div class="overflow-x-auto pb-2 pt-1">
               <div class="min-w-[620px] grid grid-cols-11 gap-2 items-stretch">
                 
                 <!-- Left Wing Header -->
-                <div class="col-span-5 text-center py-1.5 bg-surface-input/80 rounded-xl border border-surface-border flex items-center justify-center space-x-1.5">
-                  <i class="fa-solid fa-arrow-left text-[10px] text-brand-400"></i>
-                  <span class="text-[11px] font-mono font-bold text-brand-300 uppercase tracking-wider">LEFT WING (SEATS 01 – 25)</span>
+                <div class="col-span-5 text-center py-1.5 bg-white/60 dark:bg-white/[0.04] backdrop-blur-md rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center space-x-1.5 shadow-sm">
+                  <i class="fa-solid fa-arrow-left text-[10px] text-brand-500 dark:text-brand-300"></i>
+                  <span class="text-[11px] font-mono font-bold text-brand-700 dark:text-brand-200 uppercase tracking-wider">LEFT WING (SEATS 01 – 25)</span>
                 </div>
 
                 <!-- Center Aisle Header -->
                 <div class="col-span-1 text-center py-1 flex items-center justify-center">
-                  <span class="text-[9px] font-mono font-extrabold text-slate-500 uppercase tracking-widest">AISLE</span>
+                  <span class="text-[9px] font-mono font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">AISLE</span>
                 </div>
 
                 <!-- Right Wing Header -->
-                <div class="col-span-5 text-center py-1.5 bg-surface-input/80 rounded-xl border border-surface-border flex items-center justify-center space-x-1.5">
-                  <span class="text-[11px] font-mono font-bold text-brand-300 uppercase tracking-wider">RIGHT WING (SEATS 26 – 50)</span>
-                  <i class="fa-solid fa-arrow-right text-[10px] text-brand-400"></i>
+                <div class="col-span-5 text-center py-1.5 bg-white/60 dark:bg-white/[0.04] backdrop-blur-md rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center space-x-1.5 shadow-sm">
+                  <span class="text-[11px] font-mono font-bold text-brand-700 dark:text-brand-200 uppercase tracking-wider">RIGHT WING (SEATS 26 – 50)</span>
+                  <i class="fa-solid fa-arrow-right text-[10px] text-brand-500 dark:text-brand-300"></i>
                 </div>
 
-                <!-- Dynamically Populated 50 Workstations (5 Rows x 11 Cols) -->
+                <!-- Dynamically Populated 50 Workstations -->
                 <div id="seats-container" class="col-span-11 grid grid-cols-11 gap-2">
                   <!-- Generated via JavaScript -->
                 </div>
@@ -493,9 +602,9 @@
             </div>
 
             <!-- Back of Room Walkway -->
-            <div class="py-1.5 px-4 rounded-xl bg-surface-input/50 border border-surface-border text-center">
+            <div class="py-1.5 px-4 rounded-2xl bg-slate-200/40 dark:bg-white/[0.02] border border-slate-300/60 dark:border-white/[0.08] text-center backdrop-blur-md">
               <span class="text-[10px] font-mono font-semibold text-slate-500 uppercase tracking-widest">
-                🚪 BACK OF ROOM / MAIN ENTRANCE DOOR
+                🚪 BACK OF ROOM / MAIN ENTRANCE
               </span>
             </div>
 
@@ -513,38 +622,38 @@
     <div id="view-records" class="hidden space-y-5">
       
       <!-- Top Registry Control Bar -->
-      <div class="bg-surface-card border border-surface-border rounded-3xl p-5 shadow-card-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="glass-panel-elevated rounded-3xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         
         <!-- Search & Section Filter -->
         <div class="flex flex-wrap items-center gap-3 flex-1">
           <div class="relative min-w-[260px] flex-1 max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
             <input type="text" id="records-search-input" oninput="debounceFetchRecords()" placeholder="Search by student, topic, seat #..." 
-              class="w-full bg-surface-input border border-surface-border rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+              class="w-full glass-input rounded-2xl pl-10 pr-4 py-2 text-sm focus:outline-none font-medium">
           </div>
 
-          <select id="records-section-filter" onchange="fetchRecords()" class="bg-surface-input border border-surface-border text-white text-sm font-bold rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer">
-            <option value="ALL">All Sections</option>
-            <option value="BSIT - 21001">BSIT - 21001</option>
-            <option value="BSIT - 21002">BSIT - 21002</option>
-            <option value="BSIT - 21003">BSIT - 21003</option>
-            <option value="BSIT - 21007">BSIT - 21007</option>
-            <option value="BSIT - 21008">BSIT - 21008</option>
-            <option value="BSIT - 21009">BSIT - 21009</option>
+          <select id="records-section-filter" onchange="fetchRecords()" class="glass-input font-bold rounded-2xl px-3.5 py-2 text-sm focus:outline-none cursor-pointer">
+            <option value="ALL" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Sections</option>
+            <option value="BSIT - 21001" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21001</option>
+            <option value="BSIT - 21002" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21002</option>
+            <option value="BSIT - 21003" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21003</option>
+            <option value="BSIT - 21007" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21007</option>
+            <option value="BSIT - 21008" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21008</option>
+            <option value="BSIT - 21009" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">BSIT - 21009</option>
           </select>
         </div>
 
         <!-- Export & Action Controls -->
         <div class="flex items-center space-x-2">
-          <button onclick="exportCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-glow-emerald transition-all flex items-center space-x-1.5">
+          <button onclick="exportCSV()" class="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs backdrop-blur-md border border-white/20 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center space-x-1.5 cursor-pointer">
             <i class="fa-solid fa-file-csv text-sm"></i>
             <span>Export CSV</span>
           </button>
-          <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-surface-input hover:bg-surface-border border border-surface-border text-white font-bold text-xs transition-all flex items-center space-x-1.5">
+          <button onclick="window.print()" class="px-4 py-2 rounded-2xl bg-white/70 dark:bg-white/[0.06] hover:bg-white dark:hover:bg-white/[0.12] border border-slate-300 dark:border-white/15 text-slate-800 dark:text-white font-bold text-xs transition-all flex items-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-print text-sm"></i>
             <span>Print Sheet</span>
           </button>
-          <button onclick="confirmClearRecords()" class="px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-bold text-xs transition-all flex items-center space-x-1.5">
+          <button onclick="confirmClearRecords()" class="px-3.5 py-2 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 font-bold text-xs transition-all flex items-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-trash-can"></i>
             <span>Clear</span>
           </button>
@@ -552,17 +661,17 @@
 
       </div>
 
-      <!-- Printable Sheet Header (Displays only during browser print) -->
+      <!-- Printable Sheet Header -->
       <div class="print-only mb-6 p-4 border-b">
         <h1 class="text-2xl font-black text-black">Student Practical Exam System & Seat Assignment</h1>
         <p class="text-sm text-gray-700">Course: Java Fundamentals Assessment | Generated on <span id="print-date"></span></p>
       </div>
 
-      <!-- Records Table Container -->
-      <div class="bg-surface-card border border-surface-border rounded-3xl shadow-card-glass overflow-hidden print-card">
+      <!-- Records Table Glass Card -->
+      <div class="glass-panel-elevated rounded-3xl overflow-hidden print-card">
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-300">
-            <thead class="bg-surface-input/90 text-[11px] font-mono font-bold uppercase text-slate-400 border-b border-surface-border">
+          <table class="w-full text-left text-sm text-slate-700 dark:text-slate-300">
+            <thead class="bg-slate-100/80 dark:bg-white/[0.04] text-[11px] font-mono font-bold uppercase text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-white/10">
               <tr>
                 <th class="px-4 py-3.5">Seat</th>
                 <th class="px-4 py-3.5">Student Name</th>
@@ -573,7 +682,7 @@
                 <th class="px-4 py-3.5 text-right no-print">Actions</th>
               </tr>
             </thead>
-            <tbody id="records-table-body" class="divide-y divide-surface-border/60">
+            <tbody id="records-table-body" class="divide-y divide-slate-200/60 dark:divide-white/[0.06]">
               <!-- Rendered via JS -->
             </tbody>
           </table>
@@ -581,11 +690,11 @@
 
         <!-- Empty State -->
         <div id="records-empty-state" class="hidden p-16 text-center">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-surface-input text-slate-500 mb-3 border border-surface-border">
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-200 dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 mb-3 border border-slate-300 dark:border-white/10 shadow-inner">
             <i class="fa-solid fa-folder-open text-2xl"></i>
           </div>
-          <h4 class="text-slate-200 font-bold text-base">No Assignment Records Found</h4>
-          <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Use the Assignment Station on the Picker tab to assign projects and lab seats to students.</p>
+          <h4 class="text-slate-800 dark:text-slate-200 font-bold text-base">No Assignment Records Found</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">Use the Assignment Station on the Picker tab to assign projects and lab seats to students.</p>
         </div>
       </div>
 
@@ -597,45 +706,45 @@
     <!-- ========================================================================= -->
     <div id="view-pool" class="hidden space-y-5">
       
-      <!-- Top Action Bar for Topics Pool -->
-      <div class="bg-surface-card border border-surface-border rounded-3xl p-5 shadow-card-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Top Action Bar -->
+      <div class="glass-panel-elevated rounded-3xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 class="text-base font-extrabold text-white flex items-center tracking-tight">
-            <i class="fa-solid fa-cubes text-brand-400 mr-2"></i> Practical Exam Topics Pool
+          <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center tracking-tight">
+            <i class="fa-solid fa-cubes text-brand-600 dark:text-brand-300 mr-2"></i> Practical Exam Topics Pool
           </h2>
-          <p class="text-xs text-slate-400">Browse, add, or bulk import assessment problems and projects</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Browse, add, or bulk import assessment problems and projects</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openAddTopicModal()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-glow-indigo transition-all flex items-center space-x-1.5">
+          <button onclick="openAddTopicModal()" class="px-4 py-2 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-xs border border-white/20 shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all flex items-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-plus"></i>
             <span>Add Topic</span>
           </button>
-          <button onclick="openImportModal()" class="px-3.5 py-2 rounded-xl bg-surface-input hover:bg-surface-border border border-surface-border text-white font-bold text-xs transition-all flex items-center space-x-1.5">
+          <button onclick="openImportModal()" class="px-3.5 py-2 rounded-2xl bg-white/70 dark:bg-white/[0.06] hover:bg-white dark:hover:bg-white/[0.12] border border-slate-300 dark:border-white/15 text-slate-800 dark:text-white font-bold text-xs transition-all flex items-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-file-import"></i>
             <span>Import JSON/MD</span>
           </button>
           
           <!-- Export Dropdown -->
           <div class="relative inline-block" id="export-dropdown-container">
-            <button onclick="toggleExportMenu()" class="px-3.5 py-2 rounded-xl bg-surface-input hover:bg-surface-border border border-surface-border text-white font-bold text-xs transition-all flex items-center space-x-1.5">
+            <button onclick="toggleExportMenu()" class="px-3.5 py-2 rounded-2xl bg-white/70 dark:bg-white/[0.06] hover:bg-white dark:hover:bg-white/[0.12] border border-slate-300 dark:border-white/15 text-slate-800 dark:text-white font-bold text-xs transition-all flex items-center space-x-1.5 backdrop-blur-md cursor-pointer">
               <i class="fa-solid fa-download"></i>
               <span>Export</span>
               <i class="fa-solid fa-chevron-down text-[9px] ml-1"></i>
             </button>
-            <div id="export-menu" class="hidden absolute right-0 mt-2 w-44 bg-surface-card border border-surface-border rounded-2xl shadow-2xl z-50 py-1.5 text-xs">
-              <a href="/api/systems-pool/export/json" class="block px-3.5 py-2 text-slate-200 hover:bg-surface-border flex items-center space-x-2">
-                <i class="fa-solid fa-code text-amber-400"></i>
+            <div id="export-menu" class="hidden absolute right-0 mt-2 w-48 glass-panel-elevated rounded-2xl shadow-2xl z-50 py-2 text-xs">
+              <a href="/api/systems-pool/export/json" class="block px-4 py-2 text-slate-800 dark:text-slate-200 hover:bg-brand-500/10 dark:hover:bg-white/[0.08] flex items-center space-x-2">
+                <i class="fa-solid fa-code text-amber-500"></i>
                 <span>JSON File (.json)</span>
               </a>
-              <a href="/api/systems-pool/export/md" class="block px-3.5 py-2 text-slate-200 hover:bg-surface-border flex items-center space-x-2">
-                <i class="fa-brands fa-markdown text-sky-400"></i>
+              <a href="/api/systems-pool/export/md" class="block px-4 py-2 text-slate-800 dark:text-slate-200 hover:bg-brand-500/10 dark:hover:bg-white/[0.08] flex items-center space-x-2">
+                <i class="fa-brands fa-markdown text-cyan-500"></i>
                 <span>Markdown Table (.md)</span>
               </a>
             </div>
           </div>
 
-          <button onclick="confirmResetPool()" class="px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-bold text-xs transition-all flex items-center space-x-1.5">
+          <button onclick="confirmResetPool()" class="px-3.5 py-2 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 font-bold text-xs transition-all flex items-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-rotate-left"></i>
             <span>Reset 25 Defaults</span>
           </button>
@@ -654,75 +763,79 @@
   <!-- ========================================================================= -->
   <!-- FOOTER -->
   <!-- ========================================================================= -->
-  <footer class="border-t border-surface-border bg-surface-base py-4 text-center text-xs text-slate-500 no-print">
+  <footer class="border-t border-slate-200/80 dark:border-white/[0.08] bg-white/60 dark:bg-[#080C16]/60 backdrop-blur-xl py-4 text-center text-xs text-slate-500 dark:text-slate-400 no-print">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <span>Student Random System & 50-Seat Picker • Java Assessment Edition</span>
-      <span class="font-mono text-[11px] text-slate-400">Adjacent Anti-Cheating Algorithmic Protection</span>
+      <span class="flex items-center space-x-2">
+        <span>Student Random System & 50-Seat Picker</span>
+        <span class="text-slate-400 dark:text-slate-600">•</span>
+        <span class="text-brand-600 dark:text-brand-300 font-medium">Glassmorphism UI</span>
+      </span>
+      <span class="font-mono text-[11px]">Adjacent Anti-Cheating Algorithmic Protection</span>
     </div>
   </footer>
 
 
   <!-- ========================================================================= -->
-  <!-- MODALS -->
+  <!-- FROSTED GLASS MODALS -->
   <!-- ========================================================================= -->
 
   <!-- 1. ASSIGNMENT SUCCESS RESULT MODAL -->
-  <div id="modal-success" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
-    <div class="bg-surface-card border border-brand-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative transform transition-all">
+  <div id="modal-success" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xl hidden">
+    <div class="glass-panel-elevated rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
       
       <!-- Close Button -->
-      <button onclick="closeModal('modal-success')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+      <button onclick="closeModal('modal-success')" class="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all cursor-pointer">
         <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
-      <!-- Badge Icon Header -->
+      <!-- Badge Icon -->
       <div class="text-center mb-5">
-        <div class="inline-flex p-4 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 text-2xl shadow-glow-emerald mb-2">
+        <div class="inline-flex p-4 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 text-2xl shadow-[0_0_25px_rgba(16,185,129,0.4)] mb-2 border border-white/30">
           <i class="fa-solid fa-award"></i>
         </div>
-        <h3 class="text-xl font-extrabold text-white tracking-tight">Assignment Successful!</h3>
-        <p class="text-xs text-slate-400">Randomized topic and workstation verified</p>
+        <h3 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Assignment Successful!</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-300">Randomized topic and workstation verified</p>
       </div>
 
       <!-- Result Card Body -->
-      <div class="bg-surface-input border border-surface-border rounded-2xl p-5 space-y-3.5">
+      <div class="bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/15 rounded-2xl p-5 space-y-3.5 backdrop-blur-md">
         
         <!-- Student Info Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-surface-border">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
           <div>
-            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Student Name</span>
-            <h4 id="modal-student-name" class="text-base font-black text-white">Juan Dela Cruz</h4>
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Student Name</span>
+            <h4 id="modal-student-name" class="text-base font-black text-slate-900 dark:text-white">Juan Dela Cruz</h4>
           </div>
           <div class="text-right">
-            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Section</span>
-            <p id="modal-student-section" class="text-xs font-bold text-brand-400 px-2 py-0.5 rounded-md bg-brand-500/10 border border-brand-500/20 mt-0.5">BSIT - 21001</p>
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Section</span>
+            <p id="modal-student-section" class="text-xs font-bold text-brand-700 dark:text-brand-300 px-2.5 py-0.5 rounded-lg bg-brand-500/15 dark:bg-brand-500/20 border border-brand-400/30 mt-0.5">BSIT - 21001</p>
           </div>
         </div>
 
         <!-- Seat & Category Badges -->
         <div class="grid grid-cols-3 gap-2 py-1">
-          <div class="bg-surface-card p-3 rounded-xl border border-surface-border text-center">
-            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block">Workstation</span>
-            <span id="modal-seat-num" class="text-lg font-black text-emerald-400 font-mono">Seat #12</span>
+          <div class="glass-card p-3 rounded-2xl text-center border-emerald-500/30">
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block">Workstation</span>
+            <span id="modal-seat-num" class="text-lg font-black text-emerald-600 dark:text-emerald-300 font-mono">Seat #12</span>
           </div>
-          <div class="bg-surface-card p-3 rounded-xl border border-surface-border text-center col-span-2">
-            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block">Category</span>
-            <span id="modal-category" class="text-xs font-bold text-sky-300 line-clamp-1 mt-0.5">Java Practical Exam</span>
+          <div class="glass-card p-3 rounded-2xl text-center col-span-2 border-slate-200 dark:border-white/15">
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block">Category</span>
+            <span id="modal-category" class="text-xs font-bold text-cyan-600 dark:text-cyan-300 line-clamp-1 mt-0.5">Java Practical Exam</span>
           </div>
         </div>
 
         <!-- Project Details Box -->
         <div>
-          <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block mb-1">Assigned Project Title</span>
-          <div class="p-3.5 rounded-2xl bg-brand-950/40 border border-brand-500/30">
-            <h5 id="modal-system-name" class="text-sm font-extrabold text-brand-200">Student Grade Calculator</h5>
-            <div id="modal-system-desc" class="text-xs text-slate-300 mt-2 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto pr-1"></div>
+          <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block mb-1">Assigned Project Title</span>
+          <div class="p-3.5 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/[0.12] border border-indigo-400/30 backdrop-blur-md">
+            <h5 id="modal-system-name" class="text-sm font-extrabold text-indigo-900 dark:text-indigo-200">Student Grade Calculator</h5>
+            <div id="modal-system-desc" class="text-xs text-slate-700 dark:text-slate-200 mt-2 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto pr-1"></div>
           </div>
         </div>
 
         <!-- Anti Cheat Notice -->
-        <div id="modal-anticheat-box" class="hidden p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-[11px] text-emerald-300 flex items-center space-x-2">
-          <i class="fa-solid fa-shield-halved text-sm text-emerald-400"></i>
+        <div id="modal-anticheat-box" class="hidden p-2.5 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/[0.12] border border-emerald-400/30 text-[11px] text-emerald-800 dark:text-emerald-200 flex items-center space-x-2">
+          <i class="fa-solid fa-shield-halved text-sm text-emerald-500 dark:text-emerald-400"></i>
           <span>🛡️ Verified: Topic differs from all adjacent & diagonal neighbor workstations.</span>
         </div>
 
@@ -730,7 +843,7 @@
 
       <!-- Action Button -->
       <div class="mt-5 flex gap-2">
-        <button onclick="closeModal('modal-success')" class="flex-1 py-3 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm transition-all shadow-glow-indigo">
+        <button onclick="closeModal('modal-success')" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-extrabold text-sm transition-all shadow-[0_0_25px_rgba(99,102,241,0.4)] border border-white/20 cursor-pointer">
           Done / Next Student
         </button>
       </div>
@@ -739,27 +852,27 @@
   </div>
 
 
-  <!-- 2. SEAT DETAIL & PROJECT DESCRIPTION MODAL -->
-  <div id="modal-seat-inspect" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
-    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+  <!-- 2. SEAT DETAIL & PROJECT DESCRIPTION FROSTED MODAL -->
+  <div id="modal-seat-inspect" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xl hidden">
+    <div class="glass-panel-elevated rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-seat-inspect')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+      <button onclick="closeModal('modal-seat-inspect')" class="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all cursor-pointer">
         <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <!-- Seat Modal Header -->
       <div class="flex items-center space-x-3.5 mb-4">
-        <div id="inspect-seat-badge" class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-brand-600 text-white border border-brand-400 shadow-md font-mono">
+        <div id="inspect-seat-badge" class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-indigo-500/20 dark:bg-indigo-500/30 text-indigo-700 dark:text-white border border-indigo-400/40 shadow-md font-mono backdrop-blur-xl">
           #1
         </div>
         <div>
-          <h3 id="inspect-seat-title" class="text-lg font-extrabold text-white">Workstation #1</h3>
-          <p id="inspect-seat-status" class="text-xs font-bold text-emerald-400">Available</p>
+          <h3 id="inspect-seat-title" class="text-lg font-extrabold text-slate-900 dark:text-white">Workstation #1</h3>
+          <p id="inspect-seat-status" class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Available</p>
         </div>
       </div>
 
       <!-- Dynamic Content Body -->
-      <div id="inspect-content" class="bg-surface-input border border-surface-border rounded-2xl p-4 text-sm text-slate-300 space-y-3 mb-4">
+      <div id="inspect-content" class="bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/15 rounded-2xl p-4 text-sm text-slate-700 dark:text-slate-300 space-y-3 mb-4 backdrop-blur-md">
         <!-- Rendered dynamically -->
       </div>
 
@@ -773,54 +886,54 @@
 
 
   <!-- 3. BATCH MANAGE BROKEN SEATS MODAL -->
-  <div id="modal-batch-seats" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
-    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+  <div id="modal-batch-seats" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xl hidden">
+    <div class="glass-panel-elevated rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-batch-seats')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+      <button onclick="closeModal('modal-batch-seats')" class="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all cursor-pointer">
         <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-rose-500/15 text-rose-400 border border-rose-500/30 text-xl">
+        <div class="p-3 rounded-2xl bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 text-xl backdrop-blur-md">
           <i class="fa-solid fa-screwdriver-wrench"></i>
         </div>
         <div>
-          <h3 class="text-lg font-extrabold text-white">Manage Broken Workstations</h3>
-          <p class="text-xs text-slate-400">Disable offline PCs or broken chairs from random selection</p>
+          <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Manage Broken Workstations</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Disable offline PCs or broken chairs from random selection</p>
         </div>
       </div>
 
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
             Workstation Numbers (Comma or Space Separated)
           </label>
           <input type="text" id="batch-seat-numbers" placeholder="e.g., 5, 8, 12, 23" 
-            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-rose-500">
-          <p class="text-[11px] text-slate-400 mt-1">Enter valid seat numbers between 1 and 50.</p>
+            class="w-full glass-input rounded-2xl px-4 py-2.5 text-sm font-mono focus:outline-none">
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Enter valid seat numbers between 1 and 50.</p>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
             Reason / Issue Note (Optional)
           </label>
           <input type="text" id="batch-seat-reason" placeholder="e.g., Broken Monitor, Power Issue, Reserved Unit" 
-            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+            class="w-full glass-input rounded-2xl px-4 py-2 text-sm focus:outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-3 pt-2">
-          <button type="button" onclick="submitBatchSeats(true)" class="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-glow-rose transition-all flex items-center justify-center space-x-1.5">
+          <button type="button" onclick="submitBatchSeats(true)" class="py-2.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-[0_0_20px_rgba(244,63,94,0.3)] border border-white/20 transition-all flex items-center justify-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-ban"></i>
             <span>Mark Broken</span>
           </button>
-          <button type="button" onclick="submitBatchSeats(false)" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-glow-emerald transition-all flex items-center justify-center space-x-1.5">
+          <button type="button" onclick="submitBatchSeats(false)" class="py-2.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/20 transition-all flex items-center justify-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-check"></i>
             <span>Restore Available</span>
           </button>
         </div>
 
-        <div class="border-t border-surface-border pt-3">
-          <button type="button" onclick="resetAllUnavailableSeats()" class="w-full py-2 px-4 rounded-xl bg-surface-input hover:bg-surface-border text-slate-300 hover:text-white font-medium text-xs border border-surface-border transition-all flex items-center justify-center space-x-1.5">
+        <div class="border-t border-slate-200 dark:border-white/10 pt-3">
+          <button type="button" onclick="resetAllUnavailableSeats()" class="w-full py-2 px-4 rounded-2xl bg-white/60 dark:bg-white/[0.04] hover:bg-white dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 font-medium text-xs border border-slate-300 dark:border-white/10 transition-all flex items-center justify-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-rotate-left"></i>
             <span>Restore All 50 Workstations</span>
           </button>
@@ -832,49 +945,49 @@
 
 
   <!-- 4. ADD TOPIC MODAL -->
-  <div id="modal-add-topic" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
-    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+  <div id="modal-add-topic" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xl hidden">
+    <div class="glass-panel-elevated rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-add-topic')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+      <button onclick="closeModal('modal-add-topic')" class="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all cursor-pointer">
         <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 text-xl">
+        <div class="p-3 rounded-2xl bg-brand-500/15 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 text-xl backdrop-blur-md">
           <i class="fa-solid fa-circle-plus"></i>
         </div>
         <div>
-          <h3 class="text-lg font-extrabold text-white">Add Project to Pool</h3>
-          <p class="text-xs text-slate-400">Add a new exam problem or coding challenge</p>
+          <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Add Project to Pool</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Add a new exam problem or coding challenge</p>
         </div>
       </div>
 
       <form onsubmit="handleAddTopic(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">
-            System / Project Name <span class="text-rose-400">*</span>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            System / Project Name <span class="text-rose-500">*</span>
           </label>
           <input type="text" id="add-topic-name" required placeholder="e.g., Book Lending Calculator" 
-            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+            class="w-full glass-input rounded-2xl px-4 py-2 text-sm focus:outline-none">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
             Category
           </label>
           <input type="text" id="add-topic-category" value="Java Practical Exam" placeholder="e.g., Java Practical Exam" 
-            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+            class="w-full glass-input rounded-2xl px-4 py-2 text-sm focus:outline-none">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
             Description & Specifications
           </label>
           <textarea id="add-topic-desc" rows="5" placeholder="Enter problem statement, input/output requirements, etc."
-            class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 font-sans"></textarea>
+            class="w-full glass-input rounded-2xl px-4 py-2.5 text-sm focus:outline-none font-sans"></textarea>
         </div>
 
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-glow-indigo transition-all">
+        <button type="submit" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(99,102,241,0.35)] border border-white/20 transition-all backdrop-blur-md cursor-pointer">
           Save Project to Pool
         </button>
       </form>
@@ -884,27 +997,27 @@
 
 
   <!-- 5. BULK IMPORT MODAL -->
-  <div id="modal-import" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
-    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 max-w-xl w-full shadow-2xl relative">
+  <div id="modal-import" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xl hidden">
+    <div class="glass-panel-elevated rounded-3xl p-6 max-w-xl w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-import')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+      <button onclick="closeModal('modal-import')" class="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all cursor-pointer">
         <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 text-xl">
+        <div class="p-3 rounded-2xl bg-brand-500/15 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 text-xl backdrop-blur-md">
           <i class="fa-solid fa-file-import"></i>
         </div>
         <div>
-          <h3 class="text-lg font-extrabold text-white">Import Topics Data</h3>
-          <p class="text-xs text-slate-400">Paste JSON array or structured topic list</p>
+          <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Import Topics Data</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Paste JSON array or structured topic list</p>
         </div>
       </div>
 
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Import Mode</label>
-          <div class="flex gap-4 text-xs text-slate-300">
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Import Mode</label>
+          <div class="flex gap-4 text-xs text-slate-700 dark:text-slate-300">
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="radio" name="import-mode" value="append" checked class="text-brand-600">
               <span>Append (keep existing topics)</span>
@@ -917,17 +1030,17 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">JSON Content</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">JSON Content</label>
           <textarea id="import-content" rows="8" placeholder='[
   {
     "name": "ATM Simulation",
     "category": "Java Practical Exam",
     "description": "Simulate PIN check, balance inquiry, deposit and withdrawal."
   }
-]' class="w-full bg-surface-input border border-surface-border rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+]' class="w-full glass-input rounded-2xl px-4 py-2.5 text-xs font-mono focus:outline-none"></textarea>
         </div>
 
-        <button type="button" onclick="submitImport()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-glow-indigo transition-all">
+        <button type="button" onclick="submitImport()" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(99,102,241,0.35)] border border-white/20 transition-all backdrop-blur-md cursor-pointer">
           Execute Import
         </button>
       </div>
@@ -937,41 +1050,41 @@
 
 
   <!-- 6. HELP & ANTI-CHEATING RULES MODAL -->
-  <div id="modal-help" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
-    <div class="bg-surface-card border border-surface-border rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
+  <div id="modal-help" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xl hidden">
+    <div class="glass-panel-elevated rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
       
-      <button onclick="closeModal('modal-help')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-surface-input transition-all">
+      <button onclick="closeModal('modal-help')" class="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all cursor-pointer">
         <i class="fa-solid fa-xmark text-base"></i>
       </button>
 
       <div class="flex items-center space-x-3 mb-4">
-        <div class="p-3 rounded-2xl bg-brand-500/15 text-brand-400 border border-brand-500/30 text-xl">
+        <div class="p-3 rounded-2xl bg-brand-500/15 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/30 text-xl backdrop-blur-md">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div>
-          <h3 class="text-lg font-extrabold text-white">How Anti-Cheating Works</h3>
-          <p class="text-xs text-slate-400">Lab layout & neighbor restriction rules</p>
+          <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">How Anti-Cheating Works</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Lab layout & neighbor restriction rules</p>
         </div>
       </div>
 
-      <div class="space-y-3.5 text-xs text-slate-300 leading-relaxed">
-        <div class="p-3 rounded-xl bg-surface-input border border-surface-border space-y-1.5">
-          <strong class="text-brand-300 block">🛡️ 8-Neighbor Workstation Exclusion</strong>
+      <div class="space-y-3.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+        <div class="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-1.5 backdrop-blur-md">
+          <strong class="text-brand-700 dark:text-brand-300 block text-sm">🛡️ 8-Neighbor Workstation Exclusion</strong>
           <p>When assigning a project to Seat #X, the algorithm queries all 8 adjacent workstations (Front, Back, Left, Right, and 4 Diagonals) within that 5x5 wing. The chosen student will NEVER receive the same project as their neighboring classmates!</p>
         </div>
 
-        <div class="p-3 rounded-xl bg-surface-input border border-surface-border space-y-1.5">
-          <strong class="text-emerald-300 block">🪑 50 Seats Map with Center Aisle</strong>
+        <div class="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-1.5 backdrop-blur-md">
+          <strong class="text-emerald-700 dark:text-emerald-300 block text-sm">🪑 50 Seats Map with Center Aisle</strong>
           <p>Left Wing: Seats 01 – 25 | Center Aisle | Right Wing: Seats 26 – 50.</p>
         </div>
 
-        <div class="p-3 rounded-xl bg-surface-input border border-surface-border space-y-1.5">
-          <strong class="text-rose-300 block">🚫 Broken Unit Management</strong>
+        <div class="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-1.5 backdrop-blur-md">
+          <strong class="text-rose-700 dark:text-rose-300 block text-sm">🚫 Broken Unit Management</strong>
           <p>Click any workstation to mark it as broken / out of order. The random generator automatically bypasses all broken seats.</p>
         </div>
       </div>
 
-      <button onclick="closeModal('modal-help')" class="mt-5 w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-all">
+      <button onclick="closeModal('modal-help')" class="mt-5 w-full py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-xs transition-all border border-white/20 shadow-md cursor-pointer">
         Got it, Back to Lab
       </button>
 
@@ -996,12 +1109,52 @@
     // Init on Load
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('print-date').textContent = new Date().toLocaleString();
+      initThemeUI();
       startLiveClock();
       initSections();
       fetchSeatsMap();
       fetchRecords();
       fetchTopicsPool();
     });
+
+    // ==========================================
+    // THEME SWITCHER (LIGHT & DARK MODE)
+    // ==========================================
+    function initThemeUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      updateThemeUI(isDark ? 'dark' : 'light');
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      if (isDark) {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
+        updateThemeUI('light');
+        showToast('Switched to Light Mode', 'info');
+      } else {
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        updateThemeUI('dark');
+        showToast('Switched to Dark Mode', 'info');
+      }
+      // Re-render seats map to adapt styling
+      renderSeatsMap(seatsData);
+    }
+
+    function updateThemeUI(theme) {
+      const icon = document.getElementById('theme-icon-container');
+      const text = document.getElementById('theme-text');
+      if (theme === 'light') {
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-sun text-amber-500 text-sm"></i>';
+        if (text) text.textContent = 'Light';
+      } else {
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-moon text-brand-300 text-sm"></i>';
+        if (text) text.textContent = 'Dark';
+      }
+    }
 
     // Live Clock
     function startLiveClock() {
@@ -1021,10 +1174,10 @@
         const btn = document.getElementById(`tab-btn-${t}`);
         if (t === tabId) {
           view.classList.remove('hidden');
-          btn.className = 'tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-md shadow-brand-600/30';
+          btn.className = 'tab-btn flex items-center space-x-2 px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-brand-600 to-purple-600 text-white border border-white/20 shadow-[0_0_20px_rgba(99,102,241,0.4)]';
         } else {
           view.classList.add('hidden');
-          btn.className = 'tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-surface-border/40';
+          btn.className = 'tab-btn flex items-center space-x-2 px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.06]';
         }
       });
 
@@ -1039,20 +1192,20 @@
       const toast = document.createElement('div');
       
       const colors = {
-        success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-100 shadow-glow-emerald',
-        error: 'bg-rose-950/95 border-rose-500/50 text-rose-100 shadow-glow-rose',
-        info: 'bg-brand-950/95 border-brand-500/50 text-brand-100 shadow-glow-indigo',
-        warning: 'bg-amber-950/95 border-amber-500/50 text-amber-100'
+        success: 'bg-emerald-950/90 dark:bg-emerald-950/85 border-emerald-400/40 text-emerald-100 shadow-[0_0_25px_rgba(16,185,129,0.3)]',
+        error: 'bg-rose-950/90 dark:bg-rose-950/85 border-rose-400/40 text-rose-100 shadow-[0_0_25px_rgba(244,63,94,0.3)]',
+        info: 'bg-indigo-950/90 dark:bg-indigo-950/85 border-indigo-400/40 text-indigo-100 shadow-[0_0_25px_rgba(99,102,241,0.3)]',
+        warning: 'bg-amber-950/90 dark:bg-amber-950/85 border-amber-400/40 text-amber-100 shadow-[0_0_25px_rgba(245,158,11,0.3)]'
       };
 
       const icons = {
         success: 'fa-circle-check text-emerald-400',
         error: 'fa-circle-xmark text-rose-400',
-        info: 'fa-circle-info text-brand-400',
+        info: 'fa-circle-info text-brand-300',
         warning: 'fa-triangle-exclamation text-amber-400'
       };
 
-      toast.className = `flex items-center space-x-3 px-4 py-3 rounded-2xl border backdrop-blur-xl text-xs pointer-events-auto transform transition-all duration-300 translate-y-3 opacity-0 ${colors[type] || colors.info}`;
+      toast.className = `flex items-center space-x-3 px-4 py-3 rounded-2xl border backdrop-blur-2xl text-xs pointer-events-auto transform transition-all duration-300 translate-y-3 opacity-0 ${colors[type] || colors.info}`;
       toast.innerHTML = `
         <i class="fa-solid ${icons[type] || icons.info} text-base"></i>
         <div class="font-medium font-sans">${message}</div>
@@ -1104,13 +1257,13 @@
       const inputContainer = document.getElementById('manual-seat-input-container');
 
       if (mode === 'random') {
-        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-brand-500 bg-brand-500/20 text-brand-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm';
-        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-semibold border border-surface-border bg-surface-input text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5';
+        randomBtn.className = 'px-3 py-2 rounded-2xl text-xs font-bold border border-brand-500 dark:border-brand-400/60 bg-brand-500/15 dark:bg-brand-500/25 text-brand-700 dark:text-white backdrop-blur-md transition-all flex items-center justify-center space-x-1.5 shadow-sm';
+        manualBtn.className = 'px-3 py-2 rounded-2xl text-xs font-semibold border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5';
         inputContainer.classList.add('hidden');
         document.getElementById('preferred-seat').value = '';
       } else {
-        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-brand-500 bg-brand-500/20 text-brand-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm';
-        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-semibold border border-surface-border bg-surface-input text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5';
+        manualBtn.className = 'px-3 py-2 rounded-2xl text-xs font-bold border border-brand-500 dark:border-brand-400/60 bg-brand-500/15 dark:bg-brand-500/25 text-brand-700 dark:text-white backdrop-blur-md transition-all flex items-center justify-center space-x-1.5 shadow-sm';
+        randomBtn.className = 'px-3 py-2 rounded-2xl text-xs font-semibold border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all flex items-center justify-center space-x-1.5';
         inputContainer.classList.remove('hidden');
         document.getElementById('preferred-seat').focus();
       }
@@ -1139,7 +1292,7 @@
         seatsData = data.seats || [];
         
         // Update Stats Counters
-        document.getElementById('stat-available-seats').innerHTML = `${data.availableCount} <span class="text-xs font-mono font-normal text-slate-400">/ 50</span>`;
+        document.getElementById('stat-available-seats').innerHTML = `${data.availableCount} <span class="text-xs font-mono font-normal text-slate-500 dark:text-slate-400">/ 50</span>`;
         document.getElementById('stat-occupied-seats').textContent = data.occupiedCount;
         document.getElementById('stat-unavailable-seats').textContent = data.unavailableCount;
 
@@ -1172,8 +1325,8 @@
 
         // 2. Center Aisle Cell
         const aisle = document.createElement('div');
-        aisle.className = 'flex flex-col items-center justify-center py-2 text-[10px] text-slate-600 font-mono font-bold tracking-widest border-x border-dashed border-surface-border bg-surface-input/30 rounded';
-        aisle.innerHTML = `<i class="fa-solid fa-arrows-up-down text-[9px] text-slate-600"></i>`;
+        aisle.className = 'flex flex-col items-center justify-center py-2 text-[10px] text-slate-400 dark:text-slate-500 font-mono font-bold tracking-widest border-x border-dashed border-slate-300/80 dark:border-white/10 bg-slate-200/40 dark:bg-white/[0.02] rounded-xl';
+        aisle.innerHTML = `<i class="fa-solid fa-arrows-up-down text-[9px]"></i>`;
         container.appendChild(aisle);
 
         // 3. Right Wing Seats
@@ -1201,21 +1354,21 @@
       let subtitle = '';
 
       if (seat.is_unavailable) {
-        styling = 'seat-broken-pattern border-rose-500/60 text-rose-300 hover:border-rose-400';
-        statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>';
-        subtitle = `<span class="text-[9px] font-mono font-bold text-rose-400 truncate block px-0.5">BROKEN</span>`;
+        styling = 'glass-seat-broken text-rose-700 dark:text-rose-200 hover:border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)]';
+        statusIndicator = '<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)]"></span>';
+        subtitle = `<span class="text-[9px] font-mono font-bold text-rose-600 dark:text-rose-300 truncate block px-0.5">BROKEN</span>`;
       } else if (seat.is_occupied) {
-        styling = 'bg-brand-600/90 border-brand-400 text-white hover:bg-brand-500 shadow-md shadow-brand-600/30';
-        statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse"></span>';
+        styling = 'bg-gradient-to-b from-indigo-500/20 to-indigo-600/30 dark:from-indigo-500/25 dark:to-indigo-600/35 border-indigo-400/60 dark:border-indigo-300/40 text-slate-900 dark:text-white hover:border-indigo-500 dark:hover:border-indigo-300 backdrop-blur-xl shadow-[0_4px_20px_rgba(99,102,241,0.25)]';
+        statusIndicator = '<span class="w-2 h-2 rounded-full bg-brand-500 dark:bg-cyan-300 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>';
         const studentFirstName = seat.occupant ? seat.occupant.student_name.split(' ')[0] : 'Taken';
-        subtitle = `<span class="text-[9px] font-bold text-brand-100 truncate block px-0.5" title="${seat.occupant?.student_name || ''}">${escapeHtml(studentFirstName)}</span>`;
+        subtitle = `<span class="text-[9px] font-bold text-indigo-900 dark:text-indigo-100 truncate block px-0.5" title="${seat.occupant?.student_name || ''}">${escapeHtml(studentFirstName)}</span>`;
       } else {
-        styling = 'bg-surface-input border-emerald-500/30 text-emerald-300 hover:bg-emerald-950/30 hover:border-emerald-400';
-        statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>';
-        subtitle = `<span class="text-[9px] font-mono text-slate-400 block">Free</span>`;
+        styling = 'bg-white/70 dark:bg-white/[0.035] hover:bg-emerald-500/15 dark:hover:bg-emerald-500/[0.12] border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 backdrop-blur-md shadow-sm';
+        statusIndicator = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>';
+        subtitle = `<span class="text-[9px] font-mono text-slate-500 dark:text-slate-400 block">Free</span>`;
       }
 
-      btn.className = `p-1.5 rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-150 transform hover:scale-105 active:scale-95 h-[64px] relative group ${styling}`;
+      btn.className = `p-1.5 rounded-2xl border flex flex-col items-center justify-between text-center transition-all duration-200 transform hover:scale-105 active:scale-95 h-[64px] relative group cursor-pointer ${styling}`;
       btn.innerHTML = `
         <div class="flex items-center justify-between w-full px-1">
           <span class="text-[10px] font-mono font-black tracking-tight">${seatNumStr}</span>
@@ -1260,89 +1413,89 @@
       let actionsHtml = '';
 
       if (seat.is_unavailable) {
-        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black seat-broken-pattern border border-rose-500 text-rose-300 font-mono';
-        status.className = 'text-xs text-rose-400 font-bold';
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black glass-seat-broken text-rose-600 dark:text-rose-300 font-mono shadow-md';
+        status.className = 'text-xs text-rose-600 dark:text-rose-400 font-bold';
         status.textContent = 'Out of Order / Broken';
 
         contentHtml = `
-          <div><strong class="text-slate-400">Status:</strong> <span class="text-rose-300 font-bold">Offline / Disabled</span></div>
-          <div><strong class="text-slate-400">Issue Note:</strong> <span class="text-rose-200">${escapeHtml(seat.unavailable_reason || 'Broken Monitor / Unit Out of Order')}</span></div>
-          <div class="text-[11px] text-slate-500 pt-1">This seat is automatically excluded from the random assignment pool.</div>
+          <div><strong class="text-slate-500 dark:text-slate-400">Status:</strong> <span class="text-rose-600 dark:text-rose-300 font-bold">Offline / Disabled</span></div>
+          <div><strong class="text-slate-500 dark:text-slate-400">Issue Note:</strong> <span class="text-rose-600 dark:text-rose-200">${escapeHtml(seat.unavailable_reason || 'Broken Monitor / Unit Out of Order')}</span></div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 pt-1">This seat is automatically excluded from the random assignment pool.</div>
         `;
 
         actionsHtml = `
-          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, false)" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-glow-emerald transition-all flex items-center justify-center space-x-1.5">
+          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, false)" class="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/20 transition-all flex items-center justify-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-check"></i>
             <span>✅ Restore Workstation to Available</span>
           </button>
         `;
       } else if (seat.is_occupied && seat.occupant) {
-        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-brand-600 border border-brand-400 text-white shadow-md font-mono';
-        status.className = 'text-xs text-brand-400 font-bold';
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-indigo-500/20 dark:bg-indigo-500/30 border border-indigo-400/40 text-indigo-700 dark:text-white shadow-[0_0_20px_rgba(99,102,241,0.2)] font-mono backdrop-blur-xl';
+        status.className = 'text-xs text-brand-600 dark:text-brand-300 font-bold';
         status.textContent = `Occupied in ${seat.occupant.section}`;
 
         const dateStr = seat.occupant.created_at ? new Date(seat.occupant.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Recently';
 
         contentHtml = `
-          <div class="flex items-center justify-between pb-2.5 border-b border-surface-border">
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10">
             <div>
-              <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block tracking-wider">Student Name</span>
-              <span class="text-sm font-black text-white">${escapeHtml(seat.occupant.student_name)}</span>
+              <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block tracking-wider">Student Name</span>
+              <span class="text-sm font-black text-slate-900 dark:text-white">${escapeHtml(seat.occupant.student_name)}</span>
             </div>
             <div class="text-right">
-              <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block tracking-wider">Section</span>
-              <span class="text-xs font-bold text-brand-400 px-2 py-0.5 rounded-md bg-brand-500/10 border border-brand-500/20">${escapeHtml(seat.occupant.section)}</span>
+              <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block tracking-wider">Section</span>
+              <span class="text-xs font-bold text-brand-700 dark:text-brand-300 px-2.5 py-0.5 rounded-lg bg-brand-500/15 dark:bg-brand-500/20 border border-brand-400/30">${escapeHtml(seat.occupant.section)}</span>
             </div>
           </div>
 
           <div>
             <div class="flex items-center justify-between mt-1 mb-1">
-              <span class="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider">Assigned Project / Topic</span>
-              <span class="text-[10px] font-bold text-sky-300 px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20">${escapeHtml(seat.occupant.system_category || 'General')}</span>
+              <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Assigned Project / Topic</span>
+              <span class="text-[10px] font-bold text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30">${escapeHtml(seat.occupant.system_category || 'General')}</span>
             </div>
-            <h4 class="text-sm font-extrabold text-brand-200 bg-surface-card p-3 rounded-2xl border border-brand-500/30 mb-2">
+            <h4 class="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 bg-white/80 dark:bg-white/[0.04] p-3 rounded-2xl border border-indigo-400/30 mb-2 shadow-sm">
               ${escapeHtml(seat.occupant.system_name)}
             </h4>
           </div>
 
           <div>
-            <span class="text-[10px] font-mono font-bold uppercase text-slate-400 block mb-1 tracking-wider">Project Description & Requirements</span>
-            <div class="text-xs text-slate-300 bg-surface-card p-3 rounded-2xl border border-surface-border whitespace-pre-line leading-relaxed max-h-52 overflow-y-auto font-sans pr-1">
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block mb-1 tracking-wider">Project Description & Requirements</span>
+            <div class="text-xs text-slate-800 dark:text-slate-200 bg-white/60 dark:bg-white/[0.04] p-3.5 rounded-2xl border border-slate-200 dark:border-white/10 whitespace-pre-line leading-relaxed max-h-52 overflow-y-auto font-sans pr-1">
               ${escapeHtml(seat.occupant.system_description || 'No specific description provided for this topic.')}
             </div>
           </div>
 
-          <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-surface-border font-mono">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-white/10 font-mono">
             <span>Assigned: ${dateStr}</span>
-            <span class="text-emerald-400 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i> Anti-cheating checked</span>
+            <span class="text-emerald-600 dark:text-emerald-300 font-bold flex items-center"><i class="fa-solid fa-shield-halved mr-1 text-emerald-500 dark:text-emerald-400"></i> Anti-cheating checked</span>
           </div>
         `;
 
         actionsHtml = `
-          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2 rounded-xl bg-surface-card hover:bg-surface-border border border-surface-border text-white font-medium text-xs">
+          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2 rounded-2xl bg-white/80 dark:bg-white/[0.06] hover:bg-white dark:hover:bg-white/[0.12] border border-slate-300 dark:border-white/15 text-slate-800 dark:text-white font-medium text-xs backdrop-blur-md transition-all cursor-pointer">
             Use Seat #${seat.seat_number} in Picker Form
           </button>
-          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-medium text-xs">
+          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 font-medium text-xs backdrop-blur-md transition-all cursor-pointer">
             🚫 Mark Workstation as Broken
           </button>
         `;
       } else {
-        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-surface-card border border-emerald-500 text-emerald-400 font-mono';
-        status.className = 'text-xs text-emerald-400 font-bold';
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-emerald-500/15 dark:bg-emerald-500/20 border border-emerald-400/40 text-emerald-700 dark:text-emerald-300 font-mono backdrop-blur-xl';
+        status.className = 'text-xs text-emerald-600 dark:text-emerald-400 font-bold';
         status.textContent = 'Available for Assignment';
 
         contentHtml = `
-          <div><strong class="text-slate-400">Status:</strong> <span class="text-emerald-400 font-semibold">Ready for assignment</span></div>
-          <div><strong class="text-slate-400">Wing Location:</strong> <span class="text-slate-300">${seat.seat_number <= 25 ? 'Left Wing (Seats 1-25)' : 'Right Wing (Seats 26-50)'}</span></div>
-          <div class="text-[11px] text-slate-500 pt-1">No student is currently assigned to this workstation.</div>
+          <div><strong class="text-slate-500 dark:text-slate-400">Status:</strong> <span class="text-emerald-600 dark:text-emerald-300 font-semibold">Ready for assignment</span></div>
+          <div><strong class="text-slate-500 dark:text-slate-400">Wing Location:</strong> <span class="text-slate-700 dark:text-slate-300">${seat.seat_number <= 25 ? 'Left Wing (Seats 1-25)' : 'Right Wing (Seats 26-50)'}</span></div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 pt-1">No student is currently assigned to this workstation.</div>
         `;
 
         actionsHtml = `
-          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-glow-indigo transition-all flex items-center justify-center space-x-1.5">
+          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-xs shadow-[0_0_20px_rgba(99,102,241,0.35)] border border-white/20 transition-all flex items-center justify-center space-x-1.5 backdrop-blur-md cursor-pointer">
             <i class="fa-solid fa-hand-pointer"></i>
             <span>Select Seat #${seat.seat_number} in Assignment Form</span>
           </button>
-          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-medium text-xs">
+          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 font-medium text-xs backdrop-blur-md transition-all cursor-pointer">
             🚫 Mark Workstation as Broken
           </button>
         `;
@@ -1514,8 +1667,8 @@
         // Trigger celebratory confetti effect
         if (typeof confetti === 'function') {
           confetti({
-            particleCount: 90,
-            spread: 75,
+            particleCount: 100,
+            spread: 80,
             origin: { y: 0.6 }
           });
         }
@@ -1595,26 +1748,26 @@
 
       records.forEach(r => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-surface-input/60 transition-all';
+        tr.className = 'hover:bg-slate-200/40 dark:hover:bg-white/[0.04] transition-all';
         
         const dateStr = new Date(r.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
 
         tr.innerHTML = `
-          <td class="px-4 py-3 font-mono font-bold text-emerald-400">
-            ${r.seat_number ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">#${r.seat_number}</span>` : '<span class="text-slate-500">—</span>'}
+          <td class="px-4 py-3 font-mono font-bold text-emerald-600 dark:text-emerald-300">
+            ${r.seat_number ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 dark:border-emerald-400/30">#${r.seat_number}</span>` : '<span class="text-slate-400">—</span>'}
           </td>
-          <td class="px-4 py-3 font-bold text-white">${escapeHtml(r.student_name)}</td>
-          <td class="px-4 py-3 text-brand-300 font-medium font-mono text-xs">${escapeHtml(r.section)}</td>
-          <td class="px-4 py-3 text-white font-medium">
-            <span class="hover:text-brand-300 cursor-pointer transition-colors font-semibold" onclick="viewRecordDetail(${r.id})">${escapeHtml(r.system_name)}</span>
+          <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${escapeHtml(r.student_name)}</td>
+          <td class="px-4 py-3 text-brand-700 dark:text-brand-300 font-medium font-mono text-xs">${escapeHtml(r.section)}</td>
+          <td class="px-4 py-3 text-slate-900 dark:text-white font-medium">
+            <span class="hover:text-brand-600 dark:hover:text-brand-300 cursor-pointer transition-colors font-semibold" onclick="viewRecordDetail(${r.id})">${escapeHtml(r.system_name)}</span>
           </td>
-          <td class="px-4 py-3 text-xs text-slate-400">${escapeHtml(r.system_category || 'General')}</td>
-          <td class="px-4 py-3 text-xs text-slate-400 font-mono">${dateStr}</td>
+          <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">${escapeHtml(r.system_category || 'General')}</td>
+          <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 font-mono">${dateStr}</td>
           <td class="px-4 py-3 text-right space-x-1.5 no-print">
-            <button onclick="viewRecordDetail(${r.id})" class="p-1.5 rounded-lg bg-surface-card hover:bg-surface-border border border-surface-border text-slate-300 hover:text-white transition-all text-xs" title="View details">
+            <button onclick="viewRecordDetail(${r.id})" class="p-1.5 rounded-xl bg-white dark:bg-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.12] border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all text-xs cursor-pointer shadow-sm" title="View details">
               <i class="fa-solid fa-eye"></i>
             </button>
-            <button onclick="deleteRecord(${r.id})" class="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 transition-all text-xs" title="Delete record">
+            <button onclick="deleteRecord(${r.id})" class="p-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 transition-all text-xs cursor-pointer" title="Delete record">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </td>
@@ -1697,21 +1850,21 @@
 
       topics.forEach((t, idx) => {
         const card = document.createElement('div');
-        card.className = 'bg-surface-card border border-surface-border hover:border-surface-borderLight rounded-3xl p-5 shadow-card-glass flex flex-col justify-between transition-all group';
+        card.className = 'glass-card rounded-3xl p-5 flex flex-col justify-between group';
         
         card.innerHTML = `
           <div>
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-mono font-bold text-brand-400">#${(idx + 1).toString().padStart(2, '0')}</span>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-surface-input text-slate-300 border border-surface-border">${escapeHtml(t.category || 'General')}</span>
+              <span class="text-xs font-mono font-bold text-brand-600 dark:text-brand-300">#${(idx + 1).toString().padStart(2, '0')}</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/80 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-white/10 backdrop-blur-md">${escapeHtml(t.category || 'General')}</span>
             </div>
-            <h3 class="text-sm font-extrabold text-white mb-2 group-hover:text-brand-300 transition-colors">${escapeHtml(t.name)}</h3>
-            <p class="text-xs text-slate-400 line-clamp-4 whitespace-pre-line leading-relaxed">${escapeHtml(t.description || 'No description provided.')}</p>
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">${escapeHtml(t.name)}</h3>
+            <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-4 whitespace-pre-line leading-relaxed">${escapeHtml(t.description || 'No description provided.')}</p>
           </div>
 
-          <div class="mt-4 pt-3 border-t border-surface-border flex items-center justify-between text-xs">
-            <span class="text-slate-500 font-mono text-[11px]">Picked: <strong class="text-slate-300">${t.pick_count || 0} times</strong></span>
-            <button onclick="deleteTopic(${t.id})" class="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 transition-all" title="Delete Topic">
+          <div class="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs">
+            <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px]">Picked: <strong class="text-slate-800 dark:text-slate-200">${t.pick_count || 0} times</strong></span>
+            <button onclick="deleteTopic(${t.id})" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 p-1.5 rounded-xl hover:bg-rose-500/15 transition-all cursor-pointer" title="Delete Topic">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
