@@ -1,0 +1,516 @@
+{
+  "practical_exam": {
+    "title": "Java Fundamentals Practical Assessment",
+    "duration_minutes": 60,
+    "program_type": "Console Application",
+    "topics": [
+      "Java Fundamentals",
+      "Input and Output",
+      "Variables and Data Types",
+      "Operators",
+      "Conditional Statements",
+      "Loops"
+    ],
+    "mandatory_rules": [
+      "At least 2 user inputs",
+      "At least 1 calculation",
+      "At least 1 decision",
+      "At least 1 loop",
+      "Use Scanner for input",
+      "Use System.out for output",
+      "Use appropriate variables and data types",
+      "Program must produce the required output",
+      "Program must run successfully in NetBeans"
+    ],
+    "restrictions": [
+      "No arrays required",
+      "No Java Swing",
+      "No JDBC",
+      "No database",
+      "No external libraries",
+      "No advanced OOP required"
+    ],
+    "submission": [
+      "Java source file",
+      "Screenshot of source code",
+      "Screenshot of successful program output"
+    ]
+  },
+  "systems": [
+    {
+      "id": 1,
+      "title": "Student Grade Calculator",
+      "description": "Accept student information and grades, calculate the average, and determine PASS or FAIL.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Simple Payroll System",
+      "description": "Calculate employee gross pay based on hours worked, hourly rate, and overtime.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Electricity Bill Calculator",
+      "description": "Calculate an electricity bill based on kWh consumption and applicable rate.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Water Bill Calculator",
+      "description": "Calculate a water bill based on cubic meter consumption and applicable charge.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Grocery Checkout System",
+      "description": "Calculate item subtotals, total purchase, discount, and final amount.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Bus Fare Calculator",
+      "description": "Calculate passenger fare based on passenger type and travel distance.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Parking Fee Calculator",
+      "description": "Calculate parking fees based on the number of hours parked.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Restaurant Ordering System",
+      "description": "Calculate the total cost of selected food items and applicable discount.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Cinema Ticket System",
+      "description": "Calculate total cinema ticket cost based on ticket type and quantity.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Hotel Billing System",
+      "description": "Calculate a guest's room bill based on room type and number of nights.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Mobile Load Calculator",
+      "description": "Calculate the total cost of selected mobile load packages.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Simple Inventory Calculator",
+      "description": "Calculate product inventory value and determine stock status.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Quiz Score Calculator",
+      "description": "Calculate quiz percentage and determine the student's remarks.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 14,
+      "title": "ATM Withdrawal Simulation",
+      "description": "Simulate balance checking and withdrawal with transaction validation.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Sales Commission Calculator",
+      "description": "Calculate salesperson commission based on total sales.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Temperature Converter",
+      "description": "Convert Celsius/Fahrenheit values and display the result.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 17,
+      "title": "BMI Calculator",
+      "description": "Calculate BMI and determine the corresponding category.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Salary Deduction Calculator",
+      "description": "Calculate salary deductions and net salary.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Discount Calculator",
+      "description": "Calculate discount and final price based on purchase amount.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Driving Speed Checker",
+      "description": "Check whether a vehicle exceeds the speed limit and calculate a penalty.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 21,
+      "title": "Age Category System",
+      "description": "Determine a person's age category.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Leap Year Checker",
+      "description": "Determine whether a given year is a leap year.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Number Analyzer",
+      "description": "Accept multiple numbers and calculate their sum and average.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Simple Unit Converter",
+      "description": "Convert values between selected units.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    },
+    {
+      "id": 25,
+      "title": "Loan Payment Calculator",
+      "description": "Calculate loan interest, total payment, and estimated periodic payment.",
+      "requirements": [
+        "Accept at least 2 appropriate user inputs",
+        "Perform at least 1 required calculation",
+        "Use at least 1 decision using if/else or switch",
+        "Use at least 1 loop",
+        "Use appropriate variables and data types",
+        "Use arithmetic, relational, or logical operators as appropriate"
+      ],
+      "required_output": [
+        "Display the entered or processed information",
+        "Display the calculated result",
+        "Display the decision/result status",
+        "Provide an option to repeat or process another transaction where applicable"
+      ]
+    }
+  ]
+}

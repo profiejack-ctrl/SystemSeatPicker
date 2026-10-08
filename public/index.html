@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎲 Student Random System & Seat Picker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81'
+            }
+          },
+          animation: {
+            'bounce-short': 'bounce 0.6s ease-in-out 2',
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom stripes for unavailable seats */
+    .seat-unavailable {
+      background: repeating-linear-gradient(
+        45deg,
+        #fef2f2,
+        #fef2f2 6px,
+        #fee2e2 6px,
+        #fee2e2 12px
+      );
+    }
+    .dark .seat-unavailable {
+      background: repeating-linear-gradient(
+        45deg,
+        #450a0a,
+        #450a0a 6px,
+        #7f1d1d 6px,
+        #7f1d1d 12px
+      );
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .card-box {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+      }
+    }
+    .print-only {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white text-xl">
+          <i class="fa-solid fa-dice-d20"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+            System & Seat Picker
+          </h1>
+          <p class="text-xs text-slate-400">Randomized Assignment & Lab Anti-Cheating System</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions / Nav -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="switchTab('picker')" id="tab-btn-picker" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
+          <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Picker & Map
+        </button>
+        <button onclick="switchTab('records')" id="tab-btn-records" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-300 hover:bg-slate-800">
+          <i class="fa-solid fa-table-list mr-1.5"></i> Assignments (<span id="nav-count-records">0</span>)
+        </button>
+        <button onclick="switchTab('pool')" id="tab-btn-pool" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-300 hover:bg-slate-800">
+          <i class="fa-solid fa-layer-group mr-1.5"></i> Topics Pool (<span id="nav-count-pool">0</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: PICKER & SEAT MAP VIEW -->
+    <!-- ========================================================================= -->
+    <section id="view-picker" class="space-y-6">
+      
+      <!-- Top Overview Stats & Section Picker Bar -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Section Selector -->
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Section</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Active</span>
+          </div>
+          <select id="current-section-select" onchange="onSectionChange(this.value)" class="w-full bg-slate-900 border border-slate-700 text-white font-medium rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="BSIT - 21001">BSIT - 21001</option>
+            <option value="BSIT - 21002">BSIT - 21002</option>
+            <option value="BSIT - 21003">BSIT - 21003</option>
+            <option value="BSIT - 21007">BSIT - 21007</option>
+            <option value="BSIT - 21008">BSIT - 21008</option>
+            <option value="BSIT - 21009">BSIT - 21009</option>
+            <option value="ALL">All Sections (Overview)</option>
+          </select>
+        </div>
+
+        <!-- Available Seats Stat -->
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Available Seats</p>
+            <h3 id="stat-available-seats" class="text-2xl font-black text-white mt-1">50 <span class="text-xs font-normal text-slate-400">/ 50</span></h3>
+          </div>
+          <div class="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/20">
+            <i class="fa-solid fa-chair"></i>
+          </div>
+        </div>
+
+        <!-- Occupied Seats Stat -->
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-sky-400">Assigned Students</p>
+            <h3 id="stat-occupied-seats" class="text-2xl font-black text-white mt-1">0</h3>
+          </div>
+          <div class="h-11 w-11 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-xl border border-sky-500/20">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+        </div>
+
+        <!-- Unavailable Seats Stat -->
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-rose-400">Unavailable / Broken</p>
+            <h3 id="stat-unavailable-seats" class="text-2xl font-black text-white mt-1">0</h3>
+          </div>
+          <div class="h-11 w-11 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl border border-rose-500/20">
+            <i class="fa-solid fa-ban"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Two Column Grid: Left Generator Form + Right Visual 50 Seats Map -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- ======================= LEFT: PICKER FORM ======================= -->
+        <div class="lg:col-span-5 space-y-5">
+          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex items-center space-x-2 mb-5">
+              <span class="p-2 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+                <i class="fa-solid fa-id-card-clip text-lg"></i>
+              </span>
+              <div>
+                <h2 class="text-base font-bold text-white">Student Assignment</h2>
+                <p class="text-xs text-slate-400">Enter student information to generate topic & seat</p>
+              </div>
+            </div>
+
+            <form id="picker-form" onsubmit="handlePickSystem(event)" class="space-y-4">
+              <!-- Student Name -->
+              <div>
+                <label for="student-name" class="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Student Name <span class="text-rose-400">*</span>
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-user"></i>
+                  </div>
+                  <input type="text" id="student-name" required placeholder="e.g., Juan Dela Cruz" 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+              </div>
+
+              <!-- Section Input & Presets -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="student-section" class="block text-xs font-semibold text-slate-300">
+                    Section <span class="text-rose-400">*</span>
+                  </label>
+                  <span class="text-[11px] text-slate-400">Quick Presets</span>
+                </div>
+                <input type="text" id="student-section" required value="BSIT - 21001" placeholder="e.g., BSIT - 21001" 
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2">
+                
+                <!-- Quick Preset Chips -->
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" onclick="setSectionPreset('BSIT - 21001')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21001</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21002')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21002</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21003')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21003</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21007')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21007</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21008')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21008</button>
+                  <button type="button" onclick="setSectionPreset('BSIT - 21009')" class="px-2.5 py-1 text-xs rounded-lg bg-slate-900 border border-slate-700/80 hover:border-indigo-500 hover:text-indigo-300 transition-all text-slate-300">21009</button>
+                </div>
+              </div>
+
+              <!-- Manual Seat Number (Optional) -->
+              <div>
+                <label for="preferred-seat" class="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Seat Assignment Mode
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" id="seat-mode-random-btn" onclick="setSeatAssignmentMode('random')" class="px-3 py-2 rounded-xl text-xs font-medium border border-indigo-500 bg-indigo-600/20 text-indigo-300 transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-shuffle mr-1.5"></i> Random Seat (1-50)
+                  </button>
+                  <button type="button" id="seat-mode-manual-btn" onclick="setSeatAssignmentMode('manual')" class="px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-hand-pointer mr-1.5"></i> Specific Seat
+                  </button>
+                </div>
+                <div id="manual-seat-input-container" class="hidden mt-2">
+                  <input type="number" id="preferred-seat" min="1" max="50" placeholder="Enter seat # (1 - 50)"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+              </div>
+
+              <!-- Rules & Restrictions Toggle Controls -->
+              <div class="pt-2 border-t border-slate-700/60 space-y-2.5">
+                <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Randomization Rules</span>
+
+                <!-- Adjacent Restriction Checkbox -->
+                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 hover:border-slate-600 transition-all">
+                  <input type="checkbox" id="avoid-adjacent" checked class="mt-0.5 rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                  <div>
+                    <span class="text-xs font-semibold text-white flex items-center">
+                      🛡️ Anti-Cheating Adjacent Restriction
+                      <span class="ml-1.5 text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">Recommended</span>
+                    </span>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-tight">Prevents adjacent & diagonal neighbors (Front, Back, Left, Right, Diagonals) from getting the same topic.</p>
+                  </div>
+                </label>
+
+                <!-- Section Unique Checkbox -->
+                <label class="flex items-start space-x-3 cursor-pointer p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 hover:border-slate-600 transition-all">
+                  <input type="checkbox" id="avoid-duplicate-section" class="mt-0.5 rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                  <div>
+                    <span class="text-xs font-semibold text-white">🔄 Avoid Duplicate System in Entire Section</span>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-tight">No two students in the same section will get identical topics (if pool size allows).</p>
+                  </div>
+                </label>
+
+                <!-- Allow Re-roll -->
+                <label class="flex items-center space-x-3 cursor-pointer px-2.5 py-1.5">
+                  <input type="checkbox" id="allow-reroll" class="rounded bg-slate-800 border-slate-600 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                  <span class="text-xs text-slate-300">Allow Re-roll / Overwrite if student already has a record</span>
+                </label>
+              </div>
+
+              <!-- Action Pick Button -->
+              <button type="submit" id="pick-btn" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-dice text-lg animate-spin-slow"></i>
+                <span>🎲 PICK RANDOM SYSTEM & SEAT</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Quick Notice Card -->
+          <div class="bg-indigo-950/30 border border-indigo-500/20 rounded-2xl p-4 text-xs text-indigo-200/80 flex items-start space-x-3">
+            <i class="fa-solid fa-circle-info text-indigo-400 mt-0.5 text-sm"></i>
+            <div>
+              <p class="font-semibold text-indigo-300">50 Seats Laboratory Map</p>
+              <p class="mt-0.5 leading-relaxed text-slate-400">
+                Seats 01–25 are in the <strong>Left Wing</strong>, and Seats 26–50 are in the <strong>Right Wing</strong> separated by the <strong>Center Aisle</strong>. Click any seat on the map to inspect or mark as broken!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================= RIGHT: 50 SEATS MAP ======================= -->
+        <div class="lg:col-span-7">
+          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl">
+            
+            <!-- Map Header & Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-700/80">
+              <div>
+                <h2 class="text-base font-bold text-white flex items-center">
+                  <i class="fa-solid fa-network-wired text-indigo-400 mr-2"></i> Interactive 50-Seat Lab Layout
+                </h2>
+                <p class="text-xs text-slate-400">Front Teacher Desk is at the top</p>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="openBatchUnavailableModal()" class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-semibold transition-all">
+                  <i class="fa-solid fa-wrench mr-1"></i> Manage Broken Seats
+                </button>
+                <button type="button" onclick="fetchSeatsMap()" title="Refresh Map" class="p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 transition-all">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Front Teacher Desk / Whiteboard Visual Banner -->
+            <div class="my-4 py-2 px-4 rounded-xl bg-slate-900/90 border border-slate-700/60 text-center">
+              <span class="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                🖥️ INSTRUCTOR PODIUM & WHITEBOARD / FRONT OF ROOM
+              </span>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex flex-wrap items-center justify-center gap-4 py-2 text-xs">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-3.5 h-3.5 rounded-md bg-emerald-500/20 border border-emerald-500"></span>
+                <span class="text-slate-300 font-medium">Available</span>
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <span class="w-3.5 h-3.5 rounded-md bg-indigo-600 border border-indigo-400"></span>
+                <span class="text-slate-300 font-medium">Occupied</span>
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <span class="w-3.5 h-3.5 rounded-md seat-unavailable border border-rose-500"></span>
+                <span class="text-slate-300 font-medium">Unavailable / Broken</span>
+              </div>
+            </div>
+
+            <!-- 50 SEATS GRID (Left Wing 5x5 + Center Aisle + Right Wing 5x5) -->
+            <div class="mt-4 overflow-x-auto pb-2">
+              <div class="min-w-[580px] grid grid-cols-11 gap-2 items-stretch">
+                
+                <!-- Left Wing Header (Cols 1-5) -->
+                <div class="col-span-5 text-center py-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                  <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">Left Wing (Seats 01 - 25)</span>
+                </div>
+
+                <!-- Center Aisle Header (Col 6) -->
+                <div class="col-span-1 text-center py-1 flex items-center justify-center">
+                  <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest writing-mode-vertical">AISLE</span>
+                </div>
+
+                <!-- Right Wing Header (Cols 7-11) -->
+                <div class="col-span-5 text-center py-1 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                  <span class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">Right Wing (Seats 26 - 50)</span>
+                </div>
+
+                <!-- 5 Rows Container -->
+                <div id="seats-container" class="col-span-11 grid grid-cols-11 gap-2">
+                  <!-- Generated Dynamically via JS -->
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Back of Lab Visual -->
+            <div class="mt-4 py-1.5 px-4 rounded-xl bg-slate-900/50 border border-slate-800 text-center">
+              <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+                🚪 BACK OF ROOM / ENTRANCE
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: ASSIGNMENT RECORDS & SEARCH & EXPORT -->
+    <!-- ========================================================================= -->
+    <section id="view-records" class="hidden space-y-6">
+      
+      <!-- Top Actions Bar -->
+      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        <!-- Left: Search & Filter -->
+        <div class="flex flex-wrap items-center gap-3 flex-1">
+          <div class="relative min-w-[240px] flex-1 max-w-md">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="records-search-input" oninput="debounceFetchRecords()" placeholder="Search student, system, seat..." 
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <select id="records-section-filter" onchange="fetchRecords()" class="bg-slate-900 border border-slate-700 text-white text-sm rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+            <option value="ALL">All Sections</option>
+            <option value="BSIT - 21001">BSIT - 21001</option>
+            <option value="BSIT - 21002">BSIT - 21002</option>
+            <option value="BSIT - 21003">BSIT - 21003</option>
+            <option value="BSIT - 21007">BSIT - 21007</option>
+            <option value="BSIT - 21008">BSIT - 21008</option>
+            <option value="BSIT - 21009">BSIT - 21009</option>
+          </select>
+        </div>
+
+        <!-- Right: Export & Clear -->
+        <div class="flex items-center space-x-2">
+          <button onclick="exportCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-600/20 flex items-center">
+            <i class="fa-solid fa-file-csv text-sm mr-1.5"></i> Export CSV
+          </button>
+          <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs transition-all flex items-center">
+            <i class="fa-solid fa-print text-sm mr-1.5"></i> Print
+          </button>
+          <button onclick="confirmClearRecords()" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-semibold text-xs transition-all flex items-center">
+            <i class="fa-solid fa-trash-can mr-1.5"></i> Clear
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Printable Sheet Header (Shows during print only) -->
+      <div class="print-only mb-6">
+        <h1 class="text-2xl font-bold text-black">Student Practical Assessment & Seat Assignment Sheet</h1>
+        <p class="text-sm text-gray-700">Course: Java Fundamentals | Generated: <span id="print-date"></span></p>
+      </div>
+
+      <!-- Records Table Card -->
+      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl shadow-xl overflow-hidden card-box">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-900/80 text-xs uppercase font-bold text-slate-400 border-b border-slate-700">
+              <tr>
+                <th class="px-4 py-3.5">Seat</th>
+                <th class="px-4 py-3.5">Student Name</th>
+                <th class="px-4 py-3.5">Section</th>
+                <th class="px-4 py-3.5">Assigned System / Topic</th>
+                <th class="px-4 py-3.5">Category</th>
+                <th class="px-4 py-3.5">Date & Time</th>
+                <th class="px-4 py-3.5 text-right no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="records-table-body" class="divide-y divide-slate-700/60">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="records-empty-state" class="hidden p-12 text-center">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-800 text-slate-400 mb-3">
+            <i class="fa-solid fa-folder-open text-xl"></i>
+          </div>
+          <p class="text-slate-300 font-medium">No assignment records found</p>
+          <p class="text-xs text-slate-500 mt-1">Use the Picker tab to assign topics to students.</p>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: TOPICS POOL MANAGEMENT -->
+    <!-- ========================================================================= -->
+    <section id="view-pool" class="hidden space-y-6">
+      
+      <!-- Top Action Bar for Topics Pool -->
+      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center">
+            <i class="fa-solid fa-cube text-indigo-400 mr-2"></i> Topics & Practical Exam Systems Pool
+          </h2>
+          <p class="text-xs text-slate-400">Manage, import, or export systems picked for students</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openAddTopicModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-md shadow-indigo-600/20 flex items-center">
+            <i class="fa-solid fa-plus mr-1.5"></i> Add Topic
+          </button>
+          <button onclick="openImportModal()" class="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs transition-all flex items-center">
+            <i class="fa-solid fa-file-import mr-1.5"></i> Import JSON/MD
+          </button>
+          <div class="relative inline-block" id="export-dropdown-container">
+            <button onclick="toggleExportMenu()" class="px-3.5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs transition-all flex items-center">
+              <i class="fa-solid fa-download mr-1.5"></i> Export <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i>
+            </button>
+            <div id="export-menu" class="hidden absolute right-0 mt-2 w-36 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 py-1 text-xs">
+              <a href="/api/systems-pool/export/json" class="block px-3 py-2 text-slate-200 hover:bg-slate-700 flex items-center">
+                <i class="fa-solid fa-code mr-2 text-amber-400"></i> JSON File
+              </a>
+              <a href="/api/systems-pool/export/md" class="block px-3 py-2 text-slate-200 hover:bg-slate-700 flex items-center">
+                <i class="fa-brands fa-markdown mr-2 text-sky-400"></i> Markdown Table
+              </a>
+            </div>
+          </div>
+          <button onclick="confirmResetPool()" class="px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-semibold text-xs transition-all flex items-center">
+            <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset to Default
+          </button>
+        </div>
+      </div>
+
+      <!-- Topics Grid -->
+      <div id="topics-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Dynamically rendered topic cards -->
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODALS -->
+  <!-- ========================================================================= -->
+
+  <!-- 1. ASSIGNMENT SUCCESS MODAL -->
+  <div id="modal-success" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-slate-800 border border-indigo-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative animate-bounce-short">
+      
+      <!-- Close Button -->
+      <button onclick="closeModal('modal-success')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Badge Icon -->
+      <div class="text-center mb-4">
+        <div class="inline-flex p-3.5 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-900 text-2xl shadow-lg shadow-emerald-500/30 mb-2">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <h3 class="text-xl font-black text-white">System & Seat Assigned!</h3>
+        <p class="text-xs text-slate-400">Successfully generated for examination</p>
+      </div>
+
+      <!-- Result Card -->
+      <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-5 space-y-3.5">
+        
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <span class="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Student Name</span>
+            <h4 id="modal-student-name" class="text-base font-black text-white">Juan Dela Cruz</h4>
+          </div>
+          <div class="text-right">
+            <span class="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Section</span>
+            <p id="modal-student-section" class="text-sm font-semibold text-indigo-400">BSIT - 21001</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 py-1">
+          <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 text-center">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Seat Assigned</span>
+            <span id="modal-seat-num" class="text-lg font-black text-emerald-400">Seat #12</span>
+          </div>
+          <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 text-center col-span-2">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">System Category</span>
+            <span id="modal-category" class="text-xs font-bold text-sky-300 line-clamp-1 mt-0.5">Java Practical Exam</span>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] uppercase font-bold text-slate-400 block mb-1">Assigned Topic / System</span>
+          <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30">
+            <h5 id="modal-system-name" class="text-base font-black text-indigo-200">Student Grade Calculator</h5>
+            <div id="modal-system-desc" class="text-xs text-slate-300 mt-2 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+        <!-- Anti Cheat Notice -->
+        <div id="modal-anticheat-box" class="hidden p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-[11px] text-emerald-300 flex items-center space-x-2">
+          <i class="fa-solid fa-shield-halved text-sm text-emerald-400"></i>
+          <span>🛡️ Verified: Topic differs from all adjacent & diagonal neighbor seats!</span>
+        </div>
+
+      </div>
+
+      <div class="mt-5 flex gap-2">
+        <button onclick="closeModal('modal-success')" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-600/30">
+          Done / Next Student
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 2. SEAT DETAIL & STATUS MODAL (When clicking a seat) -->
+  <div id="modal-seat-inspect" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+      
+      <button onclick="closeModal('modal-seat-inspect')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div id="inspect-seat-badge" class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-indigo-600 text-white border border-indigo-400 shadow-md">
+          #1
+        </div>
+        <div>
+          <h3 id="inspect-seat-title" class="text-lg font-bold text-white">Seat #1</h3>
+          <p id="inspect-seat-status" class="text-xs text-emerald-400 font-semibold">Available</p>
+        </div>
+      </div>
+
+      <div id="inspect-content" class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-300 space-y-2 mb-4">
+        <!-- Filled dynamically -->
+      </div>
+
+      <!-- Action Buttons for seat -->
+      <div id="inspect-actions" class="space-y-2">
+        <!-- Filled dynamically -->
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 3. BATCH MANAGE BROKEN SEATS MODAL -->
+  <div id="modal-batch-seats" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+      
+      <button onclick="closeModal('modal-batch-seats')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="p-3 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xl">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">Manage Unavailable Seats</h3>
+          <p class="text-xs text-slate-400">Disable broken PCs or damaged chairs from random selection</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            Seat Numbers (Comma Separated)
+          </label>
+          <input type="text" id="batch-seat-numbers" placeholder="e.g., 5, 8, 12, 23" 
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+          <p class="text-[11px] text-slate-400 mt-1">Enter valid seat numbers between 1 and 50.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            Reason / Notes (Optional)
+          </label>
+          <input type="text" id="batch-seat-reason" placeholder="e.g., Broken Monitor, No Power, Reserved Unit" 
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button type="button" onclick="submitBatchSeats(true)" class="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center">
+            <i class="fa-solid fa-ban mr-1.5"></i> Mark Unavailable
+          </button>
+          <button type="button" onclick="submitBatchSeats(false)" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center">
+            <i class="fa-solid fa-check mr-1.5"></i> Restore Specified
+          </button>
+        </div>
+
+        <div class="border-t border-slate-700/80 pt-3">
+          <button type="button" onclick="resetAllUnavailableSeats()" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-700 text-slate-300 hover:text-white font-medium text-xs border border-slate-700 transition-all flex items-center justify-center">
+            <i class="fa-solid fa-rotate-left mr-1.5"></i> Restore All 50 Seats to Available
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 4. ADD TOPIC MODAL -->
+  <div id="modal-add-topic" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative">
+      
+      <button onclick="closeModal('modal-add-topic')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xl">
+          <i class="fa-solid fa-circle-plus"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">Add System / Topic</h3>
+          <p class="text-xs text-slate-400">Add a new exam problem or project to the pool</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleAddTopic(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            System Name <span class="text-rose-400">*</span>
+          </label>
+          <input type="text" id="add-topic-name" required placeholder="e.g., Library Book Lending System" 
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            Category
+          </label>
+          <input type="text" id="add-topic-category" value="Java Practical Exam" placeholder="e.g., Java Practical Exam" 
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">
+            Description & Requirements
+          </label>
+          <textarea id="add-topic-desc" rows="5" placeholder="Enter problem statement, input/output requirements, etc."
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all">
+          Save Topic to Pool
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- 5. BULK IMPORT TOPICS MODAL -->
+  <div id="modal-import" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-xl w-full shadow-2xl relative">
+      
+      <button onclick="closeModal('modal-import')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xl">
+          <i class="fa-solid fa-file-import"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">Import Topics Pool</h3>
+          <p class="text-xs text-slate-400">Paste JSON array or Markdown table format</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Import Mode</label>
+          <div class="flex gap-4 text-xs text-slate-300">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="radio" name="import-mode" value="append" checked class="text-indigo-600">
+              <span>Append (keep existing)</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="radio" name="import-mode" value="replace" class="text-indigo-600">
+              <span>Replace (clear existing pool first)</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">JSON Content / Topics Data</label>
+          <textarea id="import-content" rows="8" placeholder='[
+  {
+    "name": "ATM Simulation",
+    "category": "Java Fundamentals",
+    "description": "Simulate PIN check, balance inquiry, deposit and withdrawal."
+  }
+]' class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <button type="button" onclick="submitImport()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all">
+          Run Import
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 6. VIEW ASSIGNMENT DETAIL MODAL -->
+  <div id="modal-view-record" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+      
+      <button onclick="closeModal('modal-view-record')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-all">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xl">
+          <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div>
+          <h3 id="record-detail-student" class="text-lg font-bold text-white">Student Name</h3>
+          <p id="record-detail-section" class="text-xs text-indigo-400 font-semibold">Section</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs text-slate-300 space-y-3 mb-4">
+        <div class="flex justify-between">
+          <span class="text-slate-400">Seat Number:</span>
+          <span id="record-detail-seat" class="font-bold text-emerald-400">Seat #1</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Category:</span>
+          <span id="record-detail-cat" class="font-bold text-sky-300">Java</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block mb-1">Assigned Topic:</span>
+          <p id="record-detail-topic" class="font-bold text-white text-sm bg-slate-800 p-2.5 rounded-lg border border-slate-700"></p>
+        </div>
+        <div>
+          <span class="text-slate-400 block mb-1">Details / Requirements:</span>
+          <div id="record-detail-desc" class="bg-slate-800/60 p-2.5 rounded-lg border border-slate-700/60 whitespace-pre-line max-h-40 overflow-y-auto leading-relaxed"></div>
+        </div>
+        <div class="flex justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800">
+          <span>Date Picked:</span>
+          <span id="record-detail-date"></span>
+        </div>
+      </div>
+
+      <button onclick="closeModal('modal-view-record')" class="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs">
+        Close
+      </button>
+
+    </div>
+  </div>
+
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <!-- ========================================================================= -->
+  <script>
+    // State
+    let currentSection = 'BSIT - 21001';
+    let seatsData = [];
+    let topicsData = [];
+    let assignmentsData = [];
+    let seatAssignmentMode = 'random'; // 'random' or 'manual'
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('print-date').textContent = new Date().toLocaleString();
+      initSections();
+      fetchSeatsMap();
+      fetchRecords();
+      fetchTopicsPool();
+    });
+
+    // Tab Switching
+    function switchTab(tabId) {
+      ['picker', 'records', 'pool'].forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabId) {
+          view.classList.remove('hidden');
+          btn.className = 'tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30';
+        } else {
+          view.classList.add('hidden');
+          btn.className = 'tab-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-300 hover:bg-slate-800';
+        }
+      });
+
+      if (tabId === 'records') fetchRecords();
+      if (tabId === 'pool') fetchTopicsPool();
+      if (tabId === 'picker') fetchSeatsMap();
+    }
+
+    // Quick Toast
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-emerald-900/90 border-emerald-500 text-emerald-100',
+        error: 'bg-rose-900/90 border-rose-500 text-rose-100',
+        info: 'bg-indigo-900/90 border-indigo-500 text-indigo-100',
+        warning: 'bg-amber-900/90 border-amber-500 text-amber-100'
+      };
+
+      const icons = {
+        success: 'fa-circle-check text-emerald-400',
+        error: 'fa-circle-xmark text-rose-400',
+        info: 'fa-circle-info text-indigo-400',
+        warning: 'fa-triangle-exclamation text-amber-400'
+      };
+
+      toast.className = `flex items-center space-x-3 px-4 py-3 rounded-2xl border shadow-xl backdrop-blur text-xs pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <i class="fa-solid ${icons[type] || icons.info} text-base"></i>
+        <div class="font-medium">${message}</div>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // Set Section Preset
+    function setSectionPreset(section) {
+      document.getElementById('student-section').value = section;
+      document.getElementById('current-section-select').value = section;
+      currentSection = section;
+      fetchSeatsMap();
+    }
+
+    function onSectionChange(section) {
+      currentSection = section;
+      if (section !== 'ALL') {
+        document.getElementById('student-section').value = section;
+      }
+      fetchSeatsMap();
+      fetchRecords();
+    }
+
+    function setSeatAssignmentMode(mode) {
+      seatAssignmentMode = mode;
+      const randomBtn = document.getElementById('seat-mode-random-btn');
+      const manualBtn = document.getElementById('seat-mode-manual-btn');
+      const inputContainer = document.getElementById('manual-seat-input-container');
+
+      if (mode === 'random') {
+        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-indigo-500 bg-indigo-600/20 text-indigo-300 transition-all flex items-center justify-center';
+        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center';
+        inputContainer.classList.add('hidden');
+        document.getElementById('preferred-seat').value = '';
+      } else {
+        manualBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-indigo-500 bg-indigo-600/20 text-indigo-300 transition-all flex items-center justify-center';
+        randomBtn.className = 'px-3 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200 transition-all flex items-center justify-center';
+        inputContainer.classList.remove('hidden');
+        document.getElementById('preferred-seat').focus();
+      }
+    }
+
+    // Init & Refresh Section Stats
+    async function initSections() {
+      try {
+        const res = await fetch('/api/sections');
+        const data = await res.json();
+        document.getElementById('nav-count-records').textContent = data.totalStudents || 0;
+        document.getElementById('nav-count-pool').textContent = data.totalPool || 0;
+      } catch (err) {
+        console.error('Error initializing sections:', err);
+      }
+    }
+
+    // ==========================================
+    // SEATS MAP (50 SEATS)
+    // ==========================================
+    async function fetchSeatsMap() {
+      try {
+        const res = await fetch(`/api/seats?section=${encodeURIComponent(currentSection)}`);
+        const data = await res.json();
+        
+        seatsData = data.seats || [];
+        
+        // Update Stats Counters
+        document.getElementById('stat-available-seats').innerHTML = `${data.availableCount} <span class="text-xs font-normal text-slate-400">/ 50</span>`;
+        document.getElementById('stat-occupied-seats').textContent = data.occupiedCount;
+        document.getElementById('stat-unavailable-seats').textContent = data.unavailableCount;
+
+        renderSeatsMap(seatsData);
+      } catch (err) {
+        console.error('Error loading seats map:', err);
+        showToast('Failed to load lab seats map.', 'error');
+      }
+    }
+
+    function renderSeatsMap(seats) {
+      const container = document.getElementById('seats-container');
+      container.innerHTML = '';
+
+      // We have 5 rows: Row 0 to 4
+      // In each row: Left Wing (5 seats) + Aisle (1 slot) + Right Wing (5 seats) = 11 columns
+      for (let row = 0; row < 5; row++) {
+        
+        // 1. Left Wing Seats for this row (5 seats: row * 5 + 1 to row * 5 + 5)
+        for (let col = 0; col < 5; col++) {
+          const seatNum = row * 5 + col + 1;
+          const seat = seats.find(s => s.seat_number === seatNum) || { seat_number: seatNum };
+          container.appendChild(createSeatElement(seat));
+        }
+
+        // 2. Center Aisle Cell (Col 6)
+        const aisle = document.createElement('div');
+        aisle.className = 'flex flex-col items-center justify-center py-2 text-[10px] text-slate-600 font-bold tracking-widest border-x border-dashed border-slate-700/50 bg-slate-900/30 rounded';
+        aisle.innerHTML = `<i class="fa-solid fa-arrows-up-down text-[9px] text-slate-600"></i>`;
+        container.appendChild(aisle);
+
+        // 3. Right Wing Seats for this row (5 seats: 25 + row * 5 + col + 1)
+        for (let col = 0; col < 5; col++) {
+          const seatNum = 25 + (row * 5 + col + 1);
+          const seat = seats.find(s => s.seat_number === seatNum) || { seat_number: seatNum };
+          container.appendChild(createSeatElement(seat));
+        }
+      }
+    }
+
+    function createSeatElement(seat) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = () => inspectSeat(seat.seat_number);
+
+      const seatNumStr = seat.seat_number.toString().padStart(2, '0');
+      let styling = '';
+      let icon = '';
+      let subtitle = '';
+
+      if (seat.is_unavailable) {
+        styling = 'seat-unavailable border-rose-500/80 text-rose-300 hover:border-rose-400';
+        icon = '<i class="fa-solid fa-ban text-rose-400 text-xs"></i>';
+        subtitle = `<span class="text-[9px] font-bold text-rose-400 truncate block px-0.5">BROKEN</span>`;
+      } else if (seat.is_occupied) {
+        styling = 'bg-indigo-600 border-indigo-400 text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/30';
+        icon = '<i class="fa-solid fa-user-graduate text-xs text-indigo-200"></i>';
+        const studentFirstName = seat.occupant ? seat.occupant.student_name.split(' ')[0] : 'Taken';
+        subtitle = `<span class="text-[9px] font-bold text-indigo-100 truncate block px-0.5" title="${seat.occupant?.student_name || ''}">${studentFirstName}</span>`;
+      } else {
+        styling = 'bg-slate-900/90 border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/40 hover:border-emerald-400';
+        icon = '<i class="fa-solid fa-desktop text-emerald-400/80 text-xs"></i>';
+        subtitle = `<span class="text-[9px] font-medium text-slate-400 block">Free</span>`;
+      }
+
+      btn.className = `p-1.5 rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-150 transform hover:scale-105 active:scale-95 h-[62px] ${styling}`;
+      btn.innerHTML = `
+        <div class="flex items-center justify-between w-full px-1">
+          <span class="text-[10px] font-black tracking-tight">${seatNumStr}</span>
+          ${icon}
+        </div>
+        ${subtitle}
+      `;
+
+      return btn;
+    }
+
+    function inspectSeat(seatNumber) {
+      const seat = seatsData.find(s => s.seat_number === seatNumber);
+      if (!seat) return;
+
+      const badge = document.getElementById('inspect-seat-badge');
+      const title = document.getElementById('inspect-seat-title');
+      const status = document.getElementById('inspect-seat-status');
+      const content = document.getElementById('inspect-content');
+      const actions = document.getElementById('inspect-actions');
+
+      title.textContent = `Seat #${seat.seat_number}`;
+      badge.textContent = `#${seat.seat_number}`;
+
+      let contentHtml = '';
+      let actionsHtml = '';
+
+      if (seat.is_unavailable) {
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black seat-unavailable border border-rose-500 text-rose-300';
+        status.className = 'text-xs text-rose-400 font-semibold';
+        status.textContent = 'Unavailable / Out of Order';
+
+        contentHtml = `
+          <div><strong class="text-slate-400">Reason:</strong> <span class="text-rose-300">${seat.unavailable_reason || 'Broken / Reserved Unit'}</span></div>
+          <div class="text-[11px] text-slate-500">This seat is excluded from the random student assignment pool.</div>
+        `;
+
+        actionsHtml = `
+          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, false)" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center">
+            <i class="fa-solid fa-check mr-1.5"></i> ✅ Restore to Available
+          </button>
+        `;
+      } else if (seat.is_occupied && seat.occupant) {
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-indigo-600 border border-indigo-400 text-white shadow-md';
+        status.className = 'text-xs text-indigo-400 font-semibold';
+        status.textContent = `Occupied in ${seat.occupant.section}`;
+
+        const dateStr = seat.occupant.created_at ? new Date(seat.occupant.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Recently';
+
+        contentHtml = `
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-800">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Student Name</span>
+              <span class="text-sm font-black text-white">${escapeHtml(seat.occupant.student_name)}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Section</span>
+              <span class="text-xs font-bold text-indigo-400 px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">${escapeHtml(seat.occupant.section)}</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mt-1 mb-1">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned Project / Topic</span>
+              <span class="text-[10px] font-bold text-sky-300 px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20">${escapeHtml(seat.occupant.system_category || 'General')}</span>
+            </div>
+            <h4 class="text-sm font-bold text-indigo-200 bg-slate-800/80 p-2.5 rounded-xl border border-indigo-500/30 mb-2">
+              ${escapeHtml(seat.occupant.system_name)}
+            </h4>
+          </div>
+
+          <div>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">Project Description & Requirements</span>
+            <div class="text-xs text-slate-300 bg-slate-800/90 p-3 rounded-xl border border-slate-700 whitespace-pre-line leading-relaxed max-h-52 overflow-y-auto font-sans pr-1">
+              ${escapeHtml(seat.occupant.system_description || 'No specific description provided for this topic.')}
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800">
+            <span>Assigned: ${dateStr}</span>
+            <span class="text-emerald-400 font-medium"><i class="fa-solid fa-shield-halved mr-1"></i> Anti-cheating checked</span>
+          </div>
+        `;
+
+        actionsHtml = `
+          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-medium text-xs">
+            Use this Seat in Picker Form
+          </button>
+          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-medium text-xs">
+            🚫 Mark as Unavailable / Broken
+          </button>
+        `;
+      } else {
+        badge.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black bg-slate-800 border border-emerald-500 text-emerald-400';
+        status.className = 'text-xs text-emerald-400 font-semibold';
+        status.textContent = 'Available for Assignment';
+
+        contentHtml = `
+          <div><strong class="text-slate-400">Status:</strong> <span class="text-emerald-400 font-semibold">Ready to be picked</span></div>
+          <div><strong class="text-slate-400">Wing:</strong> <span class="text-slate-300">${seat.seat_number <= 25 ? 'Left Wing' : 'Right Wing'}</span></div>
+          <div class="text-[11px] text-slate-500">No student is currently assigned to this seat.</div>
+        `;
+
+        actionsHtml = `
+          <button type="button" onclick="selectSeatForStudent(${seat.seat_number})" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center">
+            <i class="fa-solid fa-hand-pointer mr-1.5"></i> Select Seat #${seat.seat_number} in Picker Form
+          </button>
+          <button type="button" onclick="toggleSeatStatus(${seat.seat_number}, true)" class="w-full py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-medium text-xs">
+            🚫 Mark as Unavailable / Broken
+          </button>
+        `;
+      }
+
+      content.innerHTML = contentHtml;
+      actions.innerHTML = actionsHtml;
+      openModal('modal-seat-inspect');
+    }
+
+    function selectSeatForStudent(seatNum) {
+      closeModal('modal-seat-inspect');
+      setSeatAssignmentMode('manual');
+      document.getElementById('preferred-seat').value = seatNum;
+      document.getElementById('student-name').focus();
+      showToast(`Selected Seat #${seatNum} in Picker Form.`, 'info');
+    }
+
+    async function toggleSeatStatus(seatNumber, isUnavailable) {
+      try {
+        let reason = 'Unavailable / Broken';
+        if (isUnavailable) {
+          const userReason = prompt(`Enter reason for marking Seat #${seatNumber} as unavailable:`, 'Broken Monitor / Unit Out of Order');
+          if (userReason === null) return; // cancelled
+          if (userReason.trim()) reason = userReason.trim();
+        }
+
+        const res = await fetch('/api/seats/toggle-unavailable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            seatNumber,
+            section: 'GLOBAL',
+            isUnavailable,
+            reason
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update seat status');
+
+        closeModal('modal-seat-inspect');
+        showToast(data.message, 'success');
+        fetchSeatsMap();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function openBatchUnavailableModal() {
+      document.getElementById('batch-seat-numbers').value = '';
+      document.getElementById('batch-seat-reason').value = '';
+      openModal('modal-batch-seats');
+    }
+
+    async function submitBatchSeats(isUnavailable) {
+      const raw = document.getElementById('batch-seat-numbers').value;
+      const reason = document.getElementById('batch-seat-reason').value.trim() || 'Unavailable / Broken';
+      
+      const seatNums = raw.split(/[\s,]+/)
+        .map(s => parseInt(s.trim()))
+        .filter(n => !isNaN(n) && n >= 1 && n <= 50);
+
+      if (seatNums.length === 0) {
+        showToast('Please enter valid seat numbers (1 - 50).', 'warning');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/seats/batch-unavailable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            seatNumbers: seatNums,
+            section: 'GLOBAL',
+            isUnavailable,
+            reason
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to batch update seats');
+
+        closeModal('modal-batch-seats');
+        showToast(`Updated ${data.count} seats successfully!`, 'success');
+        fetchSeatsMap();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function resetAllUnavailableSeats() {
+      if (!confirm('Are you sure you want to restore all unavailable / broken seats back to available?')) return;
+      try {
+        const res = await fetch('/api/seats/reset-unavailable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ section: 'GLOBAL' })
+        });
+        const data = await res.json();
+        closeModal('modal-batch-seats');
+        showToast('All 50 seats restored to available.', 'success');
+        fetchSeatsMap();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ==========================================
+    // SYSTEM PICKER SUBMISSION
+    // ==========================================
+    async function handlePickSystem(e) {
+      e.preventDefault();
+      const studentName = document.getElementById('student-name').value.trim();
+      const section = document.getElementById('student-section').value.trim();
+      const avoidAdjacentDuplicate = document.getElementById('avoid-adjacent').checked;
+      const avoidDuplicateInSection = document.getElementById('avoid-duplicate-section').checked;
+      const allowReRoll = document.getElementById('allow-reroll').checked;
+      
+      let preferredSeatNumber = null;
+      if (seatAssignmentMode === 'manual') {
+        const seatVal = parseInt(document.getElementById('preferred-seat').value);
+        if (!isNaN(seatVal) && seatVal >= 1 && seatVal <= 50) {
+          preferredSeatNumber = seatVal;
+        } else {
+          showToast('Please enter a valid seat number between 1 and 50.', 'warning');
+          return;
+        }
+      }
+
+      const pickBtn = document.getElementById('pick-btn');
+      pickBtn.disabled = true;
+      pickBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> RANDOMIZING TOPIC & SEAT...';
+
+      try {
+        const res = await fetch('/api/pick-system', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentName,
+            section,
+            avoidAdjacentDuplicate,
+            avoidDuplicateInSection,
+            allowReRoll,
+            assignSeat: true,
+            preferredSeatNumber
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.status === 409 && data.alreadyAssigned) {
+          // Already assigned warning
+          if (confirm(`Student "${studentName}" is already assigned to "${data.assignment.system_name}" at Seat #${data.assignment.seat_number}.\n\nDo you want to re-roll and overwrite this record?`)) {
+            document.getElementById('allow-reroll').checked = true;
+            handlePickSystem(e);
+            return;
+          }
+          throw new Error(data.error);
+        }
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to pick system.');
+        }
+
+        // Trigger celebratory confetti!
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        }
+
+        // Show Success Result Modal
+        const a = data.assignment;
+        document.getElementById('modal-student-name').textContent = a.student_name;
+        document.getElementById('modal-student-section').textContent = a.section;
+        document.getElementById('modal-seat-num').textContent = a.seat_number ? `Seat #${a.seat_number}` : 'Unassigned';
+        document.getElementById('modal-category').textContent = a.system_category || 'General';
+        document.getElementById('modal-system-name').textContent = a.system_name;
+        document.getElementById('modal-system-desc').textContent = a.system_description || 'No specific description provided.';
+
+        const anticheatBox = document.getElementById('modal-anticheat-box');
+        if (data.adjacentRestricted) {
+          anticheatBox.classList.remove('hidden');
+        } else {
+          anticheatBox.classList.add('hidden');
+        }
+
+        openModal('modal-success');
+
+        // Reset form inputs for next student
+        document.getElementById('student-name').value = '';
+        if (seatAssignmentMode === 'manual') {
+          document.getElementById('preferred-seat').value = '';
+        }
+        document.getElementById('student-name').focus();
+
+        // Refresh Map & Stats
+        fetchSeatsMap();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        pickBtn.disabled = false;
+        pickBtn.innerHTML = '<i class="fa-solid fa-dice text-lg mr-2"></i> 🎲 PICK RANDOM SYSTEM & SEAT';
+      }
+    }
+
+
+    // ==========================================
+    // ASSIGNMENT RECORDS TAB
+    // ==========================================
+    let searchDebounceTimer;
+    function debounceFetchRecords() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(fetchRecords, 300);
+    }
+
+    async function fetchRecords() {
+      const section = document.getElementById('records-section-filter').value;
+      const search = document.getElementById('records-search-input').value;
+
+      try {
+        const res = await fetch(`/api/assignments?section=${encodeURIComponent(section)}&search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        assignmentsData = data.assignments || [];
+
+        renderRecordsTable(assignmentsData);
+        document.getElementById('nav-count-records').textContent = assignmentsData.length;
+      } catch (err) {
+        console.error('Error fetching records:', err);
+      }
+    }
+
+    function renderRecordsTable(records) {
+      const tbody = document.getElementById('records-table-body');
+      const emptyState = document.getElementById('records-empty-state');
+      tbody.innerHTML = '';
+
+      if (records.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      records.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/60 transition-all';
+        
+        const dateStr = new Date(r.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-bold text-emerald-400">
+            ${r.seat_number ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">Seat #${r.seat_number}</span>` : '<span class="text-slate-500">—</span>'}
+          </td>
+          <td class="px-4 py-3 font-semibold text-white">${escapeHtml(r.student_name)}</td>
+          <td class="px-4 py-3 text-indigo-300 font-medium">${escapeHtml(r.section)}</td>
+          <td class="px-4 py-3 text-white font-medium">
+            <span class="hover:text-indigo-300 cursor-pointer" onclick="viewRecordDetail(${r.id})">${escapeHtml(r.system_name)}</span>
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-400">${escapeHtml(r.system_category || 'General')}</td>
+          <td class="px-4 py-3 text-xs text-slate-400">${dateStr}</td>
+          <td class="px-4 py-3 text-right space-x-1.5 no-print">
+            <button onclick="viewRecordDetail(${r.id})" class="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition-all text-xs" title="View details">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button onclick="deleteRecord(${r.id})" class="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 transition-all text-xs" title="Delete record">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function viewRecordDetail(id) {
+      const rec = assignmentsData.find(a => a.id === id);
+      if (!rec) return;
+
+      document.getElementById('record-detail-student').textContent = rec.student_name;
+      document.getElementById('record-detail-section').textContent = rec.section;
+      document.getElementById('record-detail-seat').textContent = rec.seat_number ? `Seat #${rec.seat_number}` : 'Unassigned';
+      document.getElementById('record-detail-cat').textContent = rec.system_category || 'General';
+      document.getElementById('record-detail-topic').textContent = rec.system_name;
+      document.getElementById('record-detail-desc').textContent = rec.system_description || 'No description provided.';
+      document.getElementById('record-detail-date').textContent = new Date(rec.created_at).toLocaleString();
+
+      openModal('modal-view-record');
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm('Are you sure you want to delete this student record?')) return;
+
+      try {
+        const res = await fetch(`/api/assignments/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete record.');
+
+        showToast('Record deleted successfully.', 'success');
+        fetchRecords();
+        fetchSeatsMap();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function confirmClearRecords() {
+      const section = document.getElementById('records-section-filter').value;
+      const targetText = section === 'ALL' ? 'ALL records in all sections' : `all records in section "${section}"`;
+
+      if (!confirm(`⚠️ Are you sure you want to clear ${targetText}? This cannot be undone.`)) return;
+
+      try {
+        const res = await fetch(`/api/assignments?section=${encodeURIComponent(section)}`, { method: 'DELETE' });
+        const data = await res.json();
+        showToast(`Cleared ${data.deletedCount} assignments.`, 'success');
+        fetchRecords();
+        fetchSeatsMap();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function exportCSV() {
+      const section = document.getElementById('records-section-filter').value;
+      window.location.href = `/api/export/csv?section=${encodeURIComponent(section)}`;
+    }
+
+
+    // ==========================================
+    // TOPICS POOL MANAGEMENT TAB
+    // ==========================================
+    async function fetchTopicsPool() {
+      try {
+        const res = await fetch('/api/systems-pool');
+        const data = await res.json();
+        topicsData = data.systems || [];
+
+        renderTopicsGrid(topicsData);
+        document.getElementById('nav-count-pool').textContent = topicsData.length;
+      } catch (err) {
+        console.error('Error loading topics pool:', err);
+      }
+    }
+
+    function renderTopicsGrid(topics) {
+      const grid = document.getElementById('topics-grid');
+      grid.innerHTML = '';
+
+      topics.forEach((t, idx) => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800/90 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition-all group';
+        
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-indigo-400">#${idx + 1}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700 text-slate-300">${escapeHtml(t.category || 'General')}</span>
+            </div>
+            <h3 class="text-sm font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">${escapeHtml(t.name)}</h3>
+            <p class="text-xs text-slate-400 line-clamp-4 whitespace-pre-line leading-relaxed">${escapeHtml(t.description || 'No description provided.')}</p>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs">
+            <span class="text-slate-500 text-[11px]">Picked: <strong class="text-slate-300">${t.pick_count || 0} times</strong></span>
+            <button onclick="deleteTopic(${t.id})" class="text-rose-400 hover:text-rose-300 p-1 rounded hover:bg-rose-500/10 transition-all" title="Delete Topic">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function openAddTopicModal() {
+      document.getElementById('add-topic-name').value = '';
+      document.getElementById('add-topic-category').value = 'Java Practical Exam';
+      document.getElementById('add-topic-desc').value = '';
+      openModal('modal-add-topic');
+    }
+
+    async function handleAddTopic(e) {
+      e.preventDefault();
+      const name = document.getElementById('add-topic-name').value.trim();
+      const category = document.getElementById('add-topic-category').value.trim();
+      const description = document.getElementById('add-topic-desc').value.trim();
+
+      try {
+        const res = await fetch('/api/systems-pool', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, category, description })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to add topic.');
+
+        closeModal('modal-add-topic');
+        showToast('New topic added to pool!', 'success');
+        fetchTopicsPool();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deleteTopic(id) {
+      if (!confirm('Are you sure you want to delete this topic from the pool?')) return;
+      try {
+        const res = await fetch(`/api/systems-pool/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete topic.');
+
+        showToast('Topic deleted.', 'success');
+        fetchTopicsPool();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function toggleExportMenu() {
+      document.getElementById('export-menu').classList.toggle('hidden');
+    }
+    // Close export menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('export-dropdown-container');
+      if (container && !container.contains(e.target)) {
+        document.getElementById('export-menu').classList.add('hidden');
+      }
+    });
+
+    function openImportModal() {
+      openModal('modal-import');
+    }
+
+    async function submitImport() {
+      const content = document.getElementById('import-content').value.trim();
+      const mode = document.querySelector('input[name="import-mode"]:checked').value;
+
+      if (!content) {
+        showToast('Please paste valid JSON topics.', 'warning');
+        return;
+      }
+
+      let parsedTopics = [];
+      try {
+        parsedTopics = JSON.parse(content);
+        if (!Array.isArray(parsedTopics)) {
+          if (parsedTopics.systems && Array.isArray(parsedTopics.systems)) {
+            parsedTopics = parsedTopics.systems.map(s => ({
+              name: s.title || s.name,
+              category: s.category || 'Java Practical Exam',
+              description: s.description || ''
+            }));
+          } else {
+            throw new Error('Data must be an array of topic objects.');
+          }
+        }
+      } catch (e) {
+        showToast('Invalid JSON format: ' + e.message, 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/systems-pool/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topics: parsedTopics, mode })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to import topics.');
+
+        closeModal('modal-import');
+        showToast(data.message, 'success');
+        fetchTopicsPool();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function confirmResetPool() {
+      if (!confirm('Are you sure you want to reset the pool to the default 25 Java Practical Exam systems?')) return;
+      try {
+        const res = await fetch('/api/systems-pool/reset', { method: 'POST' });
+        const data = await res.json();
+        showToast(`Reset pool to ${data.count} default systems.`, 'success');
+        fetchTopicsPool();
+        initSections();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+
+</body>
+</html>
