@@ -751,6 +751,19 @@
         </div>
       </div>
 
+      <!-- Topics Search & Filter Bar -->
+      <div class="glass-panel rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="relative w-full sm:w-96">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="topic-search-input" oninput="filterTopicsPool()" placeholder="Search topic name, description, or keyword..." class="w-full glass-input rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none">
+        </div>
+        <div class="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-mono w-full sm:w-auto justify-between sm:justify-end">
+          <span>Showing <strong id="topics-filtered-count" class="text-brand-600 dark:text-brand-300">0</strong> topics</span>
+          <span class="text-slate-400 dark:text-slate-600">•</span>
+          <span class="text-[11px] text-slate-500"><i class="fa-solid fa-hand-pointer mr-1"></i>Click card to view details</span>
+        </div>
+      </div>
+
       <!-- Topics Catalog Grid -->
       <div id="topics-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Rendered via JS -->
@@ -826,7 +839,13 @@
 
         <!-- Project Details Box -->
         <div>
-          <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block mb-1">Assigned Project Title</span>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Assigned Project Title</span>
+            <button type="button" onclick="viewTopicDetailByName(document.getElementById('modal-system-name').textContent)" class="text-[11px] font-bold text-brand-600 dark:text-brand-300 hover:underline flex items-center space-x-1 cursor-pointer">
+              <span>View Full Specs</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </button>
+          </div>
           <div class="p-3.5 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/[0.12] border border-indigo-400/30 backdrop-blur-md">
             <h5 id="modal-system-name" class="text-sm font-extrabold text-indigo-900 dark:text-indigo-200">Student Grade Calculator</h5>
             <div id="modal-system-desc" class="text-xs text-slate-700 dark:text-slate-200 mt-2 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto pr-1"></div>
@@ -1082,11 +1101,98 @@
           <strong class="text-rose-700 dark:text-rose-300 block text-sm">🚫 Broken Unit Management</strong>
           <p>Click any workstation to mark it as broken / out of order. The random generator automatically bypasses all broken seats.</p>
         </div>
+
+        <div class="p-3.5 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/[0.12] border border-indigo-400/30 space-y-1.5 backdrop-blur-md">
+          <strong class="text-indigo-800 dark:text-indigo-200 block text-sm">☕ 60-Minute Practical Assessment Rules</strong>
+          <ul class="space-y-1 text-[11px] text-slate-700 dark:text-slate-200">
+            <li>• <strong>Application:</strong> Java Console Application using Scanner and System.out</li>
+            <li>• <strong>Core:</strong> At least 2 user inputs, 1 loop (for/while/do-while), 1 calculation, 1 decision (if/else/switch)</li>
+            <li>• <strong>Restrictions:</strong> No arrays required • No Java Swing • No JDBC • No external libraries</li>
+            <li>• <strong>Submission:</strong> Java source file (.java), Screenshot of code, Screenshot of terminal output</li>
+          </ul>
+        </div>
       </div>
 
       <button onclick="closeModal('modal-help')" class="mt-5 w-full py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-xs transition-all border border-white/20 shadow-md cursor-pointer">
         Got it, Back to Lab
       </button>
+
+    </div>
+  </div>
+
+
+  <!-- 7. TOPIC DETAIL & REQUIREMENTS MODAL -->
+  <div id="modal-topic-detail" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-xl hidden">
+    <div class="glass-panel-elevated rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl relative max-h-[92vh] flex flex-col">
+      
+      <!-- Close Button -->
+      <button onclick="closeModal('modal-topic-detail')" class="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-white/10 transition-all cursor-pointer">
+        <i class="fa-solid fa-xmark text-base"></i>
+      </button>
+
+      <!-- Topic Modal Header -->
+      <div class="flex items-start space-x-3.5 mb-3.5 pr-8">
+        <div id="topic-detail-badge" class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black bg-brand-500/15 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 border border-brand-400/40 shadow-sm font-mono backdrop-blur-xl shrink-0">
+          #01
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span id="topic-detail-category" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/80 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-white/10">Java Practical Exam</span>
+            <span id="topic-detail-status" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">Active in Pool</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-500/30 font-mono">60 Mins</span>
+          </div>
+          <h3 id="topic-detail-title" class="text-lg font-extrabold text-slate-900 dark:text-white leading-tight">Topic Name</h3>
+        </div>
+      </div>
+
+      <!-- Quick Stats Row -->
+      <div class="grid grid-cols-2 gap-2.5 mb-3.5 shrink-0">
+        <div class="glass-card p-3 rounded-2xl flex items-center justify-between border-slate-200 dark:border-white/10">
+          <div>
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block">Total Picked</span>
+            <span id="topic-detail-picks" class="text-sm font-black text-brand-600 dark:text-brand-300 font-mono">0 times</span>
+          </div>
+          <div class="h-8 w-8 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+        </div>
+        <div class="glass-card p-3 rounded-2xl flex items-center justify-between border-slate-200 dark:border-white/10">
+          <div>
+            <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 block">Assessment Type</span>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Java Console App (Scanner/System.out)</span>
+          </div>
+          <div class="h-8 w-8 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-code"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description & Requirements Container -->
+      <div class="space-y-1.5 mb-4 flex-1 min-h-0 flex flex-col">
+        <div class="flex items-center justify-between shrink-0">
+          <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+            Assessment Specifications & Instructions
+          </span>
+          <button onclick="copyTopicDescription()" class="text-[11px] text-brand-600 dark:text-brand-300 hover:underline flex items-center space-x-1 cursor-pointer">
+            <i class="fa-regular fa-copy text-xs"></i>
+            <span>Copy Full Specs</span>
+          </button>
+        </div>
+        <div id="topic-detail-desc" class="bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/15 rounded-2xl p-4 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed max-h-[58vh] overflow-y-auto font-sans shadow-inner space-y-3">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center space-x-2.5">
+        <button onclick="copyTopicDescription()" class="px-4 py-2.5 rounded-2xl bg-white/70 dark:bg-white/[0.06] hover:bg-white dark:hover:bg-white/[0.12] border border-slate-300 dark:border-white/15 text-slate-800 dark:text-white font-bold text-xs backdrop-blur-md transition-all flex items-center justify-center space-x-1.5 cursor-pointer">
+          <i class="fa-regular fa-copy"></i>
+          <span>Copy</span>
+        </button>
+        <button onclick="closeModal('modal-topic-detail')" class="flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-xs transition-all border border-white/20 shadow-md cursor-pointer">
+          Done / Close
+        </button>
+      </div>
 
     </div>
   </div>
@@ -1105,6 +1211,7 @@
     let topicsData = [];
     let assignmentsData = [];
     let seatAssignmentMode = 'random'; // 'random' or 'manual'
+    let currentViewedTopic = null;
 
     // Init on Load
     document.addEventListener('DOMContentLoaded', () => {
@@ -1453,9 +1560,15 @@
               <span class="text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Assigned Project / Topic</span>
               <span class="text-[10px] font-bold text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/30">${escapeHtml(seat.occupant.system_category || 'General')}</span>
             </div>
-            <h4 class="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 bg-white/80 dark:bg-white/[0.04] p-3 rounded-2xl border border-indigo-400/30 mb-2 shadow-sm">
-              ${escapeHtml(seat.occupant.system_name)}
-            </h4>
+            <div onclick="viewTopicDetailByName('${escapeHtml(seat.occupant.system_name).replace(/'/g, "\\'")}')" class="group cursor-pointer bg-white/80 dark:bg-white/[0.04] hover:bg-brand-500/10 dark:hover:bg-brand-500/15 p-3 rounded-2xl border border-indigo-400/30 hover:border-brand-400/50 mb-2 shadow-sm transition-all flex items-center justify-between">
+              <h4 class="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">
+                ${escapeHtml(seat.occupant.system_name)}
+              </h4>
+              <span class="text-[11px] font-bold text-brand-600 dark:text-brand-300 flex items-center space-x-1 shrink-0 ml-2">
+                <span>View Full Specs</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+              </span>
+            </div>
           </div>
 
           <div>
@@ -1759,7 +1872,10 @@
           <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">${escapeHtml(r.student_name)}</td>
           <td class="px-4 py-3 text-brand-700 dark:text-brand-300 font-medium font-mono text-xs">${escapeHtml(r.section)}</td>
           <td class="px-4 py-3 text-slate-900 dark:text-white font-medium">
-            <span class="hover:text-brand-600 dark:hover:text-brand-300 cursor-pointer transition-colors font-semibold" onclick="viewRecordDetail(${r.id})">${escapeHtml(r.system_name)}</span>
+            <span class="hover:text-brand-600 dark:hover:text-brand-300 cursor-pointer transition-colors font-semibold flex items-center space-x-1.5 group" onclick="viewTopicDetailByName('${escapeHtml(r.system_name).replace(/'/g, "\\'")}')" title="Click to view topic specifications">
+              <span>${escapeHtml(r.system_name)}</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-0 group-hover:opacity-100 text-brand-500 transition-opacity"></i>
+            </span>
           </td>
           <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">${escapeHtml(r.system_category || 'General')}</td>
           <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 font-mono">${dateStr}</td>
@@ -1839,18 +1955,54 @@
 
         renderTopicsGrid(topicsData);
         document.getElementById('nav-count-pool').textContent = topicsData.length;
+        const filteredCountEl = document.getElementById('topics-filtered-count');
+        if (filteredCountEl) filteredCountEl.textContent = topicsData.length;
       } catch (err) {
         console.error('Error loading topics pool:', err);
       }
+    }
+
+    function filterTopicsPool() {
+      const q = (document.getElementById('topic-search-input')?.value || '').toLowerCase().trim();
+      const filteredCountEl = document.getElementById('topics-filtered-count');
+      if (!q) {
+        renderTopicsGrid(topicsData);
+        if (filteredCountEl) filteredCountEl.textContent = topicsData.length;
+        return;
+      }
+      const filtered = topicsData.filter(t => 
+        (t.name && t.name.toLowerCase().includes(q)) || 
+        (t.description && t.description.toLowerCase().includes(q)) ||
+        (t.category && t.category.toLowerCase().includes(q))
+      );
+      renderTopicsGrid(filtered);
+      if (filteredCountEl) filteredCountEl.textContent = filtered.length;
     }
 
     function renderTopicsGrid(topics) {
       const grid = document.getElementById('topics-grid');
       grid.innerHTML = '';
 
+      if (!topics || topics.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full p-12 text-center glass-panel rounded-3xl">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-200 dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 mb-2">
+              <i class="fa-solid fa-magnifying-glass text-xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">No matching topics found</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Try a different search keyword or add a new topic.</p>
+          </div>
+        `;
+        return;
+      }
+
       topics.forEach((t, idx) => {
         const card = document.createElement('div');
-        card.className = 'glass-card rounded-3xl p-5 flex flex-col justify-between group';
+        card.className = 'glass-card rounded-3xl p-5 flex flex-col justify-between group cursor-pointer hover:border-brand-400/50 hover:shadow-xl hover:translate-y-[-2px] transition-all duration-200';
+        card.onclick = (e) => {
+          if (e.target.closest('button')) return;
+          viewTopicDetail(t.id);
+        };
         
         card.innerHTML = `
           <div>
@@ -1858,18 +2010,249 @@
               <span class="text-xs font-mono font-bold text-brand-600 dark:text-brand-300">#${(idx + 1).toString().padStart(2, '0')}</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/80 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-white/10 backdrop-blur-md">${escapeHtml(t.category || 'General')}</span>
             </div>
-            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">${escapeHtml(t.name)}</h3>
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors flex items-center justify-between">
+              <span>${escapeHtml(t.name)}</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-0 group-hover:opacity-100 text-brand-500 transition-opacity ml-1.5 shrink-0"></i>
+            </h3>
             <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-4 whitespace-pre-line leading-relaxed">${escapeHtml(t.description || 'No description provided.')}</p>
           </div>
 
           <div class="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs">
             <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px]">Picked: <strong class="text-slate-800 dark:text-slate-200">${t.pick_count || 0} times</strong></span>
-            <button onclick="deleteTopic(${t.id})" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 p-1.5 rounded-xl hover:bg-rose-500/15 transition-all cursor-pointer" title="Delete Topic">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
+            <div class="flex items-center space-x-1.5">
+              <button onclick="event.stopPropagation(); viewTopicDetail(${t.id})" class="text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 px-2.5 py-1 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20 transition-all cursor-pointer text-xs flex items-center space-x-1" title="View Full Topic Details">
+                <i class="fa-regular fa-file-lines text-[11px]"></i>
+                <span class="text-[11px] font-bold">Details</span>
+              </button>
+              <button onclick="event.stopPropagation(); deleteTopic(${t.id})" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 p-1.5 rounded-xl hover:bg-rose-500/15 transition-all cursor-pointer text-xs" title="Delete Topic">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
           </div>
         `;
         grid.appendChild(card);
+      });
+    }
+
+    function viewTopicDetail(topicId) {
+      const topic = topicsData.find(t => t.id === topicId);
+      if (!topic) return;
+      currentViewedTopic = topic;
+
+      const idx = topicsData.findIndex(t => t.id === topicId);
+      const badgeNum = (idx >= 0 ? idx + 1 : topic.id).toString().padStart(2, '0');
+
+      const badgeEl = document.getElementById('topic-detail-badge');
+      const titleEl = document.getElementById('topic-detail-title');
+      const catEl = document.getElementById('topic-detail-category');
+      const statusEl = document.getElementById('topic-detail-status');
+      const picksEl = document.getElementById('topic-detail-picks');
+      const descEl = document.getElementById('topic-detail-desc');
+
+      if (badgeEl) badgeEl.textContent = `#${badgeNum}`;
+      if (titleEl) titleEl.textContent = topic.name;
+      if (catEl) catEl.textContent = topic.category || 'Java Practical Exam';
+      if (statusEl) {
+        if (topic.is_active === 0) {
+          statusEl.textContent = 'Inactive';
+          statusEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30';
+        } else {
+          statusEl.textContent = 'Active in Pool';
+          statusEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30';
+        }
+      }
+      if (picksEl) picksEl.textContent = `${topic.pick_count || 0} times`;
+
+      // Check for structured details_json
+      let d = null;
+      try {
+        if (topic.details_json) {
+          d = typeof topic.details_json === 'string' ? JSON.parse(topic.details_json) : topic.details_json;
+        }
+      } catch (e) {}
+
+      if (d && (d.instructions || d.required_inputs)) {
+        let inputsHtml = '';
+        if (Array.isArray(d.required_inputs) && d.required_inputs.length > 0) {
+          inputsHtml = d.required_inputs.map(inp => `
+            <span class="inline-flex items-center px-2.5 py-1 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 font-medium text-xs border border-brand-400/30 shadow-xs">
+              <i class="fa-solid fa-angle-right mr-1.5 text-[10px] text-brand-500"></i>${escapeHtml(inp)}
+            </span>
+          `).join('');
+        } else {
+          inputsHtml = `<span class="text-xs text-slate-400 italic">None specified</span>`;
+        }
+
+        let outputsHtml = '';
+        if (Array.isArray(d.required_output) && d.required_output.length > 0) {
+          outputsHtml = d.required_output.map(outp => `
+            <span class="inline-flex items-center px-2.5 py-1 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-medium text-xs border border-emerald-400/30 shadow-xs">
+              <i class="fa-solid fa-check text-[10px] mr-1.5 text-emerald-500"></i>${escapeHtml(outp)}
+            </span>
+          `).join('');
+        } else {
+          outputsHtml = `<span class="text-xs text-slate-400 italic">None specified</span>`;
+        }
+
+        let reqsHtml = '';
+        if (Array.isArray(d.requirements) && d.requirements.length > 0) {
+          reqsHtml = d.requirements.map(req => `
+            <li class="flex items-start space-x-2">
+              <i class="fa-solid fa-circle-check text-purple-500 mt-0.5 text-xs shrink-0"></i>
+              <span class="text-slate-800 dark:text-slate-200">${escapeHtml(req)}</span>
+            </li>
+          `).join('');
+        }
+
+        let menuOptionsHtml = '';
+        if (Array.isArray(d.menu_options) && d.menu_options.length > 0) {
+          menuOptionsHtml = d.menu_options.map(opt => `
+            <div class="font-mono text-xs text-amber-900 dark:text-amber-200 bg-amber-500/10 p-2 rounded-xl border border-amber-500/20 flex items-center space-x-2">
+              <i class="fa-solid fa-terminal text-amber-500 text-[11px]"></i>
+              <span>${escapeHtml(opt)}</span>
+            </div>
+          `).join('');
+        }
+
+        descEl.innerHTML = `
+          <!-- Problem Instructions Banner -->
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-brand-500/10 dark:bg-brand-500/15 border border-brand-400/30 text-slate-800 dark:text-slate-100 leading-relaxed text-xs sm:text-sm shadow-sm mb-3">
+            <div class="flex items-center space-x-2 text-[10px] font-mono font-bold uppercase text-brand-600 dark:text-brand-300 mb-1.5 tracking-wider">
+              <i class="fa-solid fa-file-signature text-xs"></i>
+              <span>Problem Statement & Instructions</span>
+            </div>
+            <p class="font-semibold">${escapeHtml(d.instructions || topic.description)}</p>
+          </div>
+
+          <!-- Grid: Required Inputs & Expected Outputs -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div class="p-3 rounded-2xl bg-white/70 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10">
+              <div class="flex items-center space-x-1.5 text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">
+                <i class="fa-solid fa-keyboard text-brand-500"></i>
+                <span>Required User Inputs (Min 2)</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${inputsHtml}
+              </div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-white/70 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10">
+              <div class="flex items-center space-x-1.5 text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">
+                <i class="fa-solid fa-desktop text-emerald-500"></i>
+                <span>Required Program Output</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${outputsHtml}
+              </div>
+            </div>
+          </div>
+
+          <!-- Specific Logic & Calculations -->
+          <div class="p-3.5 rounded-2xl bg-white/70 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 mb-3">
+            <div class="flex items-center space-x-1.5 text-[10px] font-mono font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">
+              <i class="fa-solid fa-gears text-purple-500"></i>
+              <span>Processing & Logic Requirements</span>
+            </div>
+            <ul class="space-y-1.5 text-xs">
+              ${reqsHtml}
+            </ul>
+          </div>
+
+          <!-- Menu Options & Strict Validation Policy -->
+          <div class="p-3.5 rounded-2xl bg-amber-500/[0.08] dark:bg-amber-500/[0.1] border border-amber-500/25 mb-3 space-y-2">
+            <div class="flex items-center space-x-1.5 text-[10px] font-mono font-bold uppercase text-amber-700 dark:text-amber-300">
+              <i class="fa-solid fa-list-check text-xs"></i>
+              <span>Menu Options & Strict Validation</span>
+            </div>
+            <div class="space-y-1">
+              ${menuOptionsHtml}
+            </div>
+            <div class="pt-1 text-[11px] text-amber-900 dark:text-amber-200 leading-snug">
+              <strong class="font-bold">Validation Rule:</strong> ${escapeHtml(d.menu_validation || 'Accept only listed menu choices. Reject invalid options and prompt again.')}
+            </div>
+          </div>
+
+          <!-- Assessment Rules & Constraints Accordion -->
+          <div class="p-3 rounded-2xl bg-slate-200/50 dark:bg-white/[0.02] border border-slate-300 dark:border-white/10 text-xs">
+            <div class="flex items-center justify-between text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              <span>Assessment Scope & Environment</span>
+              <span class="text-brand-600 dark:text-brand-300 font-bold">60 Minutes</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
+              <div>• Scanner for input & System.out for output</div>
+              <div>• At least 1 loop & 1 decision structure</div>
+              <div>• No arrays required • No Java Swing</div>
+              <div>• No JDBC / database • No external libraries</div>
+            </div>
+          </div>
+        `;
+      } else {
+        descEl.textContent = topic.description || 'No description or specifications provided for this topic.';
+      }
+
+      openModal('modal-topic-detail');
+    }
+
+    function viewTopicDetailByName(name) {
+      if (!name) return;
+      const topic = topicsData.find(t => t.name.toLowerCase().trim() === name.toLowerCase().trim());
+      if (topic) {
+        viewTopicDetail(topic.id);
+      } else {
+        showToast(`Topic "${name}" not found in current pool.`, 'info');
+      }
+    }
+
+    function copyTopicDescription() {
+      if (!currentViewedTopic) return;
+      const t = currentViewedTopic;
+      let d = null;
+      try {
+        if (t.details_json) {
+          d = typeof t.details_json === 'string' ? JSON.parse(t.details_json) : t.details_json;
+        }
+      } catch (e) {}
+
+      let textToCopy = '';
+      if (d && d.instructions) {
+        textToCopy = `=====================================================
+TOPIC: ${t.name}
+Category: ${t.category || 'Java Practical Exam'}
+Assessment: Java Fundamentals Practical Assessment (60 Mins)
+Application Type: Java console application
+=====================================================
+
+📋 INSTRUCTIONS:
+${d.instructions}
+
+⌨️ REQUIRED INPUTS:
+• ${(d.required_inputs || []).join('\n• ')}
+
+⚙️ KEY REQUIREMENTS:
+• ${(d.requirements || []).join('\n• ')}
+
+📑 MENU OPTIONS:
+• ${(d.menu_options || []).join('\n• ')}
+
+🛡️ MENU VALIDATION:
+${d.menu_validation || 'Accept only listed menu choices. For an unlisted choice, display error and prompt again.'}
+
+🖥️ REQUIRED OUTPUT:
+• ${(d.required_output || []).join('\n• ')}
+
+⚠️ GENERAL ASSESSMENT RULES:
+• Every system must accept at least 2 user inputs and contain at least 1 loop & 1 decision
+• Use Scanner for keyboard input and System.out for output
+• Restrictions: No arrays required, No Java Swing, No JDBC, No external libraries
+• Submissions: Java source file, Screenshot of source code, Screenshot of successful output`;
+      } else {
+        textToCopy = `[Topic: ${t.name}]\nCategory: ${t.category || 'General'}\n\n${t.description || 'No description provided.'}`;
+      }
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        showToast('Full specifications copied to clipboard!', 'success');
+      }).catch(() => {
+        showToast('Failed to copy topic details.', 'error');
       });
     }
 
@@ -1942,19 +2325,19 @@
         return;
       }
 
-      let parsedTopics = [];
+      let payloadTopics = [];
       try {
-        parsedTopics = JSON.parse(content);
-        if (!Array.isArray(parsedTopics)) {
-          if (parsedTopics.systems && Array.isArray(parsedTopics.systems)) {
-            parsedTopics = parsedTopics.systems.map(s => ({
-              name: s.title || s.name,
-              category: s.category || 'Java Practical Exam',
-              description: s.description || ''
-            }));
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed)) {
+          payloadTopics = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+          if (Array.isArray(parsed.systems)) {
+            payloadTopics = parsed; // pass full schema to server
           } else {
-            throw new Error('Data must be an array of topic objects.');
+            throw new Error('Data must contain a "systems" array or be an array of topics.');
           }
+        } else {
+          throw new Error('Invalid JSON structure.');
         }
       } catch (e) {
         showToast('Invalid JSON format: ' + e.message, 'error');
@@ -1965,7 +2348,7 @@
         const res = await fetch('/api/systems-pool/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topics: parsedTopics, mode })
+          body: JSON.stringify({ topics: payloadTopics, mode })
         });
 
         const data = await res.json();

@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import db, { DEFAULT_SYSTEMS, getSeatInfo, getNeighborSeats } from './db.js';
+import db, { DEFAULT_SYSTEMS, assessmentMeta, formatSystemDescription, syncDefaultSystems, getSeatInfo, getNeighborSeats } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -180,7 +180,7 @@ app.post('/api/pick-system', (req, res) => {
       const updateStmt = db.prepare(`
         UPDATE student_assignments 
         SET system_id = ?, system_name = ?, system_category = ?, system_description = ?, 
-            seat_number = ?, seat_label = ?, created_at = CURRENT_TIMESTAMP
+            seat_number = ?, seat_label = ?, details_json = ?, created_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
       updateStmt.run(
@@ -190,6 +190,7 @@ app.post('/api/pick-system', (req, res) => {
         chosenSystem.description,
         chosenSeatInfo?.seat_number || null,
         chosenSeatInfo?.seat_label || null,
+        chosenSystem.details_json || null,
         existingRecord.id
       );
       assignmentId = existingRecord.id;
@@ -197,9 +198,9 @@ app.post('/api/pick-system', (req, res) => {
       const insertStmt = db.prepare(`
         INSERT INTO student_assignments (
           student_name, section, system_id, system_name, system_category, system_description,
-          seat_number, seat_label
+          seat_number, seat_label, details_json
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       const result = insertStmt.run(
         trimmedName,
@@ -209,7 +210,8 @@ app.post('/api/pick-system', (req, res) => {
         chosenSystem.category,
         chosenSystem.description,
         chosenSeatInfo?.seat_number || null,
-        chosenSeatInfo?.seat_label || null
+        chosenSeatInfo?.seat_label || null,
+        chosenSystem.details_json || null
       );
       assignmentId = result.lastInsertRowid;
     }
@@ -504,6 +506,14 @@ app.get('/api/sections', (req, res) => {
   }
 });
 
+// 10.5 Get assessment metadata and guidelines
+app.get('/api/assessment-info', (req, res) => {
+  return res.json({
+    assessment: assessmentMeta,
+    totalSystems: DEFAULT_SYSTEMS.length
+  });
+});
+
 // 11. Get system pool list
 app.get('/api/systems-pool', (req, res) => {
   try {
@@ -559,7 +569,25 @@ app.post('/api/systems-pool', (req, res) => {
 // 14. Bulk Import Topics (JSON / Parsed MD)
 app.post('/api/systems-pool/import', (req, res) => {
   try {
-    const { topics = [], mode = 'append' } = req.body;
+    let { topics = [], mode = 'append' } = req.body;
+
+    let meta = null;
+    if (!Array.isArray(topics) && topics && typeof topics === 'object') {
+      if (Array.isArray(topics.systems)) {
+        meta = {
+          schema_version: topics.schema_version,
+          title: topics.title,
+          duration_minutes: topics.duration_minutes,
+          application_type: topics.application_type,
+          common_requirements: topics.common_requirements,
+          menu_validation_rules: topics.menu_validation_rules,
+          input_validation_rules: topics.input_validation_rules,
+          restrictions: topics.restrictions,
+          submission_requirements: topics.submission_requirements
+        };
+        topics = topics.systems;
+      }
+    }
 
     if (!Array.isArray(topics) || topics.length === 0) {
       return res.status(400).json({ error: 'No valid topics provided for import.' });
@@ -570,21 +598,37 @@ app.post('/api/systems-pool/import', (req, res) => {
     }
 
     const insertStmt = db.prepare(`
-      INSERT INTO system_pool (name, category, description, is_active)
-      VALUES (?, ?, ?, 1)
+      INSERT INTO system_pool (name, category, description, is_active, details_json)
+      VALUES (?, ?, ?, 1, ?)
       ON CONFLICT(name) DO UPDATE SET 
         category = excluded.category,
-        description = excluded.description
+        description = excluded.description,
+        details_json = excluded.details_json,
+        is_active = 1
     `);
 
     let importedCount = 0;
     for (const t of topics) {
-      const name = (typeof t === 'string' ? t : t.name || '').trim();
-      const category = (t.category || 'General').trim();
-      const description = (t.description || '').trim();
+      const name = (typeof t === 'string' ? t : (t.title || t.name || '')).trim();
+      const category = (t.category || 'Java Practical Exam').trim();
+      
+      let description = '';
+      let detailsJson = null;
+
+      if (typeof t === 'object') {
+        if (t.instructions || t.required_inputs || t.requirements) {
+          description = formatSystemDescription(t);
+          detailsJson = JSON.stringify({ ...t, assessment_meta: meta || assessmentMeta });
+        } else {
+          description = (t.description || '').trim();
+          detailsJson = t.details_json || null;
+        }
+      } else {
+        description = String(t);
+      }
 
       if (name) {
-        insertStmt.run(name, category, description);
+        insertStmt.run(name, category, description, detailsJson);
         importedCount++;
       }
     }
@@ -607,17 +651,33 @@ app.post('/api/systems-pool/import', (req, res) => {
 app.get('/api/systems-pool/export/:format', (req, res) => {
   try {
     const { format } = req.params;
-    const systems = db.prepare('SELECT name, category, description FROM system_pool WHERE is_active = 1 ORDER BY name ASC').all();
+    const systems = db.prepare('SELECT name, category, description, details_json FROM system_pool WHERE is_active = 1 ORDER BY name ASC').all();
 
     if (format === 'json') {
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', 'attachment; filename="system_topics.json"');
-      return res.send(JSON.stringify(systems, null, 2));
+      res.setHeader('Content-Disposition', 'attachment; filename="assessment_topics.json"');
+      const exportObj = {
+        ...assessmentMeta,
+        systems: systems.map((s, idx) => {
+          let details = null;
+          try {
+            if (s.details_json) details = JSON.parse(s.details_json);
+          } catch(e) {}
+          return details || {
+            id: idx + 1,
+            title: s.name,
+            category: s.category,
+            instructions: s.description
+          };
+        })
+      };
+      return res.send(JSON.stringify(exportObj, null, 2));
     } else if (format === 'md') {
-      let md = '# 📚 System Project Topics Pool\n\n';
+      let md = `# 📚 ${assessmentMeta.title || 'Practical Exam Topics Pool'}\n\n`;
+      md += `> Duration: ${assessmentMeta.duration_minutes || 60} Minutes | Application: ${assessmentMeta.application_type || 'Java console application'}\n\n`;
       md += `Total Topics: ${systems.length}\n\n`;
-      md += '| # | System Name | Category | Description / Scope |\n';
-      md += '|---|-------------|----------|---------------------|\n';
+      md += '| # | System Name | Category | Description / Instructions |\n';
+      md += '|---|-------------|----------|----------------------------|\n';
       systems.forEach((s, idx) => {
         const cleanName = (s.name || '').replace(/\|/g, '-');
         const cleanCat = (s.category || 'General').replace(/\|/g, '-');
@@ -626,7 +686,7 @@ app.get('/api/systems-pool/export/:format', (req, res) => {
       });
 
       res.setHeader('Content-Type', 'text/markdown');
-      res.setHeader('Content-Disposition', 'attachment; filename="system_topics.md"');
+      res.setHeader('Content-Disposition', 'attachment; filename="assessment_topics.md"');
       return res.send(md);
     } else {
       return res.status(400).send('Supported formats: json, md');
@@ -653,11 +713,11 @@ app.post('/api/systems-pool/reset', (req, res) => {
   try {
     db.exec('DELETE FROM system_pool');
     const insertStmt = db.prepare(`
-      INSERT INTO system_pool (name, category, description, is_active)
-      VALUES (?, ?, ?, 1)
+      INSERT INTO system_pool (name, category, description, is_active, details_json)
+      VALUES (?, ?, ?, 1, ?)
     `);
     for (const sys of DEFAULT_SYSTEMS) {
-      insertStmt.run(sys.name, sys.category, sys.description);
+      insertStmt.run(sys.name, sys.category, sys.description, sys.details_json);
     }
     return res.json({ success: true, count: DEFAULT_SYSTEMS.length });
   } catch (err) {

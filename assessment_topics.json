@@ -1,0 +1,691 @@
+{
+  "schema_version": "1.1",
+  "title": "Java Fundamentals Practical Assessment - 25 Systems",
+  "duration_minutes": 60,
+  "application_type": "Java console application",
+  "common_requirements": [
+    "Every system must accept at least 2 user inputs.",
+    "Every system must contain at least 1 loop (for, while, or do-while).",
+    "Every system must perform at least 1 calculation or meaningful processing step.",
+    "Every system must use at least 1 decision (if/else, if/else-if, or switch).",
+    "Use Scanner for keyboard input and System.out for output.",
+    "Use appropriate variables and data types.",
+    "Display clear prompts and readable results."
+  ],
+  "menu_validation_rules": [
+    "Display available menu choices before asking for a selection.",
+    "Accept only a choice explicitly listed in the current menu.",
+    "If the choice is outside the menu, display an invalid-choice message and ask again.",
+    "Do not execute any action for an invalid choice.",
+    "Apply validation to the main menu and all submenus."
+  ],
+  "input_validation_rules": [
+    "Reject negative values where they are not meaningful.",
+    "Reject zero when a positive value is required, such as quantity, duration, height, or question count.",
+    "Reject blank names or identifiers where required.",
+    "For invalid input, display a helpful message and prompt again."
+  ],
+  "restrictions": [
+    "No arrays required",
+    "No Java Swing",
+    "No JDBC or database",
+    "No external libraries",
+    "No advanced OOP required"
+  ],
+  "submission_requirements": [
+    "Java source file",
+    "Screenshot of source code",
+    "Screenshot of successful program output"
+  ],
+  "systems": [
+    {
+      "id": 1,
+      "title": "Student Grade Calculator",
+      "instructions": "Enter a student's name and three grades. Calculate the average and show PASS if the average is at least 75; otherwise show FAIL.",
+      "required_inputs": [
+        "Student name",
+        "Three grades"
+      ],
+      "requirements": [
+        "Calculate average",
+        "Use if/else for PASS/FAIL",
+        "Repeat for another student or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Name",
+        "Grades",
+        "Average",
+        "PASS/FAIL"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Simple Payroll System",
+      "instructions": "Enter employee name, hours worked, and hourly rate. Pay up to 40 hours at the regular rate; pay hours above 40 at 1.5 times the rate.",
+      "required_inputs": [
+        "Employee name",
+        "Hours worked",
+        "Hourly rate"
+      ],
+      "requirements": [
+        "Calculate regular and overtime pay",
+        "Calculate gross pay",
+        "Repeat for another employee or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Employee",
+        "Hours",
+        "Regular pay",
+        "Overtime pay",
+        "Gross pay"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Electricity Bill Calculator",
+      "instructions": "Enter customer name and monthly kWh use. Use a sample rate of PHP 12 per kWh and classify use as LOW (0-100), MODERATE (101-300), or HIGH (over 300).",
+      "required_inputs": [
+        "Customer name",
+        "kWh consumed"
+      ],
+      "requirements": [
+        "Bill = kWh × PHP 12",
+        "Use conditions for consumption category",
+        "Repeat for another customer or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Customer",
+        "kWh",
+        "Category",
+        "Estimated bill"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Water Bill Calculator",
+      "instructions": "Enter customer name and cubic meters used. Charge PHP 150 for up to 10 cubic meters, plus PHP 20 for each cubic meter above 10.",
+      "required_inputs": [
+        "Customer name",
+        "Cubic meters"
+      ],
+      "requirements": [
+        "Calculate bill using the stated rates",
+        "Classify BASIC (up to 10) or EXCESS (over 10)",
+        "Repeat or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Customer",
+        "Consumption",
+        "Category",
+        "Estimated bill"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Grocery Checkout System",
+      "instructions": "Enter product name, unit price, and quantity. Calculate subtotal and apply a 10% discount when subtotal is PHP 1,000 or more.",
+      "required_inputs": [
+        "Product name",
+        "Unit price",
+        "Quantity"
+      ],
+      "requirements": [
+        "Subtotal = price × quantity",
+        "Apply discount conditionally",
+        "Repeat checkout or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Product",
+        "Price",
+        "Quantity",
+        "Subtotal",
+        "Discount",
+        "Final total"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Bus Fare Calculator",
+      "instructions": "Enter passenger name, passenger type, and distance. Base fare is PHP 15 plus PHP 2 per kilometer. Students and seniors receive 20% off.",
+      "required_inputs": [
+        "Passenger name",
+        "Passenger type",
+        "Distance"
+      ],
+      "requirements": [
+        "Calculate base fare and eligible discount",
+        "Validate passenger type: regular/student/senior",
+        "Repeat for another passenger or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Passenger",
+        "Type",
+        "Distance",
+        "Base fare",
+        "Discount",
+        "Final fare"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Parking Fee Calculator",
+      "instructions": "Enter vehicle plate and parking duration. Charge PHP 30 for the first hour or part of it, plus PHP 20 for each additional hour or part.",
+      "required_inputs": [
+        "Plate number",
+        "Hours parked"
+      ],
+      "requirements": [
+        "Calculate fee using the stated rule",
+        "Classify SHORT (up to 3 hours) or LONG (over 3)",
+        "Repeat for another vehicle or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Plate",
+        "Duration",
+        "Category",
+        "Parking fee"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Restaurant Ordering System",
+      "instructions": "Enter customer name, select a food item, and enter quantity. Menu: Burger PHP 120, Pasta PHP 150, Chicken Meal PHP 180. Apply 5% off for subtotals of PHP 500 or more.",
+      "required_inputs": [
+        "Customer name",
+        "Food menu choice",
+        "Quantity"
+      ],
+      "requirements": [
+        "Use only the listed food menu and prices",
+        "Calculate subtotal and conditional discount",
+        "Repeat order or exit"
+      ],
+      "menu_options": [
+        "Food menu: 1 Burger PHP 120; 2 Pasta PHP 150; 3 Chicken Meal PHP 180",
+        "Main menu: 1 Place order; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Customer",
+        "Food item",
+        "Price",
+        "Quantity",
+        "Subtotal",
+        "Discount",
+        "Final total"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Cinema Ticket System",
+      "instructions": "Enter customer name, select ticket type, and enter quantity. Regular is PHP 250, Student PHP 200, Senior PHP 180. Give 10% off for 5 or more tickets.",
+      "required_inputs": [
+        "Customer name",
+        "Ticket type",
+        "Quantity"
+      ],
+      "requirements": [
+        "Use the fixed ticket prices",
+        "Calculate subtotal and group discount",
+        "Repeat transaction or exit"
+      ],
+      "menu_options": [
+        "Ticket menu: 1 Regular PHP 250; 2 Student PHP 200; 3 Senior PHP 180",
+        "Main menu: 1 Buy tickets; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Customer",
+        "Ticket type",
+        "Unit price",
+        "Quantity",
+        "Subtotal",
+        "Discount",
+        "Total"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Hotel Billing System",
+      "instructions": "Enter guest name, room type, and nights. Standard costs PHP 1,000 per night; Deluxe costs PHP 1,800. Give 10% off for stays of at least 3 nights.",
+      "required_inputs": [
+        "Guest name",
+        "Room type",
+        "Number of nights"
+      ],
+      "requirements": [
+        "Use the fixed room rates",
+        "Calculate subtotal and eligible discount",
+        "Repeat for another guest or exit"
+      ],
+      "menu_options": [
+        "Room menu: 1 Standard PHP 1000/night; 2 Deluxe PHP 1800/night",
+        "Main menu: 1 Calculate bill; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Guest",
+        "Room type",
+        "Rate",
+        "Nights",
+        "Subtotal",
+        "Discount",
+        "Final bill"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Mobile Load Calculator",
+      "instructions": "Enter a mobile number, choose a load package (PHP 50, PHP 100, or PHP 200), and enter quantity.",
+      "required_inputs": [
+        "Mobile number",
+        "Package choice",
+        "Quantity"
+      ],
+      "requirements": [
+        "Calculate package price × quantity",
+        "Classify total of PHP 500 or more as BULK; otherwise REGULAR",
+        "Repeat purchase or exit"
+      ],
+      "menu_options": [
+        "Package menu: 1 PHP 50; 2 PHP 100; 3 PHP 200",
+        "Main menu: 1 Purchase load; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Mobile number",
+        "Package",
+        "Unit price",
+        "Quantity",
+        "Total",
+        "Category"
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Simple Inventory Calculator",
+      "instructions": "Enter product name, unit price, and stock quantity. Calculate stock value and classify stock below 10 as LOW; otherwise SUFFICIENT.",
+      "required_inputs": [
+        "Product name",
+        "Unit price",
+        "Stock quantity"
+      ],
+      "requirements": [
+        "Stock value = price × quantity",
+        "Use condition for stock status",
+        "Check another product or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Product",
+        "Price",
+        "Quantity",
+        "Stock value",
+        "Stock status"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Quiz Score Calculator",
+      "instructions": "Enter student name, total questions, and correct answers. Calculate percentage and show PASS at 75% or higher.",
+      "required_inputs": [
+        "Student name",
+        "Total questions",
+        "Correct answers"
+      ],
+      "requirements": [
+        "Percentage = correct ÷ total × 100",
+        "Validate correct answers are between 0 and total",
+        "Repeat for another student or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Student",
+        "Total questions",
+        "Correct answers",
+        "Percentage",
+        "PASS/FAIL"
+      ]
+    },
+    {
+      "id": 14,
+      "title": "ATM Withdrawal Simulation",
+      "instructions": "Enter account name and starting balance. Let the user check balance, withdraw, or exit. A withdrawal must be positive and not exceed the balance.",
+      "required_inputs": [
+        "Account name",
+        "Starting balance",
+        "Transaction choice",
+        "Withdrawal amount when needed"
+      ],
+      "requirements": [
+        "Update balance after a valid withdrawal",
+        "Reject invalid amount or insufficient funds",
+        "Loop until Exit is selected"
+      ],
+      "menu_options": [
+        "1 Check balance; 2 Withdraw; 3 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Account",
+        "Transaction result",
+        "Withdrawal amount",
+        "Current/updated balance"
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Sales Commission Calculator",
+      "instructions": "Enter salesperson name and sales. Commission is 5% below PHP 10,000 and 10% for sales of PHP 10,000 or more. Base salary is PHP 5,000.",
+      "required_inputs": [
+        "Salesperson name",
+        "Sales amount"
+      ],
+      "requirements": [
+        "Choose rate using if/else",
+        "Calculate commission and base salary + commission",
+        "Repeat for another salesperson or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Salesperson",
+        "Sales",
+        "Rate",
+        "Commission",
+        "Base salary",
+        "Total income"
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Temperature Converter",
+      "instructions": "Enter a temperature and choose Celsius-to-Fahrenheit or Fahrenheit-to-Celsius.",
+      "required_inputs": [
+        "Temperature value",
+        "Conversion choice"
+      ],
+      "requirements": [
+        "C to F: (C × 9 / 5) + 32",
+        "F to C: (F - 32) × 5 / 9",
+        "Loop to convert again or exit"
+      ],
+      "menu_options": [
+        "Conversion menu: 1 Celsius to Fahrenheit; 2 Fahrenheit to Celsius",
+        "Main menu: 1 Convert; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Original temperature",
+        "Conversion",
+        "Converted temperature"
+      ]
+    },
+    {
+      "id": 17,
+      "title": "BMI Calculator",
+      "instructions": "Enter a person's name, weight in kilograms, and height in meters. Calculate BMI and classify it.",
+      "required_inputs": [
+        "Name",
+        "Weight",
+        "Height"
+      ],
+      "requirements": [
+        "BMI = weight ÷ height²",
+        "Classify below 18.5 Underweight; below 25 Normal; below 30 Overweight; otherwise Obese",
+        "Repeat or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Name",
+        "Weight",
+        "Height",
+        "BMI",
+        "Category"
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Salary Deduction Calculator",
+      "instructions": "Enter employee name and gross salary. Deduct 10% for salary below PHP 20,000 and 15% for salary of PHP 20,000 or more.",
+      "required_inputs": [
+        "Employee name",
+        "Gross salary"
+      ],
+      "requirements": [
+        "Select deduction rate with if/else",
+        "Calculate deduction and net salary",
+        "Repeat or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Employee",
+        "Gross salary",
+        "Deduction rate",
+        "Deduction",
+        "Net salary"
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Discount Calculator",
+      "instructions": "Enter customer name and purchase amount. No discount below PHP 1,000; 5% from PHP 1,000 to below PHP 5,000; 10% at PHP 5,000 or more.",
+      "required_inputs": [
+        "Customer name",
+        "Purchase amount"
+      ],
+      "requirements": [
+        "Choose discount rate with conditions",
+        "Calculate discount and final price",
+        "Repeat or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Customer",
+        "Purchase amount",
+        "Rate",
+        "Discount",
+        "Final price"
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Driving Speed Checker",
+      "instructions": "Enter driver name, vehicle speed, and speed limit. If speed exceeds the limit, show OVER LIMIT and a sample PHP 500 penalty.",
+      "required_inputs": [
+        "Driver name",
+        "Vehicle speed",
+        "Speed limit"
+      ],
+      "requirements": [
+        "Calculate difference from limit",
+        "Use condition for status and penalty",
+        "Repeat for another driver or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Driver",
+        "Speed",
+        "Limit",
+        "Difference",
+        "Status",
+        "Penalty"
+      ]
+    },
+    {
+      "id": 21,
+      "title": "Age Category System",
+      "instructions": "Enter a person's name and age. Classify 0-12 as Child, 13-19 as Teenager, 20-59 as Adult, and 60+ as Senior.",
+      "required_inputs": [
+        "Name",
+        "Age"
+      ],
+      "requirements": [
+        "Use if/else-if to classify age",
+        "Reject negative age",
+        "Repeat for another person or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Name",
+        "Age",
+        "Category"
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Leap Year Checker",
+      "instructions": "Enter a year and determine whether it is a leap year.",
+      "required_inputs": [
+        "Year"
+      ],
+      "requirements": [
+        "Leap year if divisible by 400, or divisible by 4 but not by 100",
+        "Use arithmetic and logical operators",
+        "Loop to check more years or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Year",
+        "LEAP YEAR or NOT A LEAP YEAR"
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Number Analyzer",
+      "instructions": "Enter a name and how many numbers to analyze, then enter each number. Calculate sum and average without arrays.",
+      "required_inputs": [
+        "Name",
+        "Count of numbers",
+        "Each number"
+      ],
+      "requirements": [
+        "Use a loop to read numbers and accumulate sum",
+        "Calculate average",
+        "Classify average as positive, negative, or zero",
+        "Repeat analysis or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Name",
+        "Count",
+        "Sum",
+        "Average",
+        "Classification"
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Simple Unit Converter",
+      "instructions": "Choose kilometers-to-meters or kilograms-to-grams, then enter a value.",
+      "required_inputs": [
+        "Conversion choice",
+        "Numeric value"
+      ],
+      "requirements": [
+        "Multiply value by 1000",
+        "Display correct output unit",
+        "Loop for more conversions or exit"
+      ],
+      "menu_options": [
+        "Conversion menu: 1 Kilometers to meters; 2 Kilograms to grams",
+        "Main menu: 1 Convert; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Original value/unit",
+        "Conversion selected",
+        "Converted value/unit"
+      ]
+    },
+    {
+      "id": 25,
+      "title": "Loan Payment Calculator",
+      "instructions": "Enter borrower name, loan amount, duration in months, and annual interest rate. Use simple interest for this exercise.",
+      "required_inputs": [
+        "Borrower name",
+        "Loan amount",
+        "Duration in months",
+        "Annual interest rate"
+      ],
+      "requirements": [
+        "Interest = principal × rate/100 × months/12",
+        "Total repayment = principal + interest",
+        "Monthly payment = total ÷ months",
+        "Classify duration as SHORT TERM (12 months or less) or LONG TERM",
+        "Repeat or exit"
+      ],
+      "menu_options": [
+        "1 Perform calculation/task; 2 Exit"
+      ],
+      "menu_validation": "Accept only listed menu choices. For an unlisted choice, display 'Invalid choice. Please select an available option.' and prompt again without performing an action.",
+      "required_output": [
+        "Borrower",
+        "Principal",
+        "Duration",
+        "Annual rate",
+        "Interest",
+        "Total repayment",
+        "Monthly payment",
+        "Duration category"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +19,7 @@ db.exec(`
     name TEXT NOT NULL UNIQUE,
     category TEXT DEFAULT 'General',
     description TEXT,
+    details_json TEXT,
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -34,6 +36,7 @@ db.exec(`
     seat_column INTEGER,
     seat_row INTEGER,
     seat_label TEXT,
+    details_json TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -63,6 +66,15 @@ if (!columnNames.has('seat_row')) {
 if (!columnNames.has('seat_label')) {
   db.exec(`ALTER TABLE student_assignments ADD COLUMN seat_label TEXT;`);
 }
+if (!columnNames.has('details_json')) {
+  db.exec(`ALTER TABLE student_assignments ADD COLUMN details_json TEXT;`);
+}
+
+const poolTableInfo = db.prepare(`PRAGMA table_info(system_pool)`).all();
+const poolColumnNames = new Set(poolTableInfo.map(c => c.name));
+if (!poolColumnNames.has('details_json')) {
+  db.exec(`ALTER TABLE system_pool ADD COLUMN details_json TEXT;`);
+}
 
 // Ensure existing records have clean "Seat #X" labels
 db.exec(`
@@ -71,7 +83,7 @@ db.exec(`
   WHERE seat_number IS NOT NULL AND seat_label LIKE 'Col%';
 `);
 
-// Now create indexes safely
+// Create indexes safely
 db.exec(`
   CREATE INDEX IF NOT EXISTS idx_assignments_section ON student_assignments(section);
   CREATE INDEX IF NOT EXISTS idx_assignments_student ON student_assignments(student_name);
@@ -116,148 +128,150 @@ export function getNeighborSeats(seatNumber) {
   return neighbors;
 }
 
-// Default Pool of Systems: Java Fundamentals Practical Assessment (25 Systems)
-const DEFAULT_SYSTEMS = [
-  {
-    name: 'Student Grade Calculator',
-    category: 'Java Practical Exam',
-    description: 'Accept student information and grades, calculate the average, and determine PASS or FAIL.\n\n📌 Requirements:\n• Accept at least 2 appropriate user inputs\n• Perform at least 1 required calculation\n• Use at least 1 decision using if/else or switch\n• Use at least 1 loop\n• Use Scanner for input & System.out for output\n\n🖥️ Required Output:\n• Display student details and calculated average\n• Display PASS / FAIL status remark\n• Provide an option to repeat for another student'
-  },
-  {
-    name: 'Simple Payroll System',
-    category: 'Java Practical Exam',
-    description: 'Calculate employee gross pay based on hours worked, hourly rate, and overtime.\n\n📌 Requirements:\n• Accept hours worked and hourly rate\n• Calculate regular pay and overtime pay\n• Use decision structures for overtime condition\n• Loop to calculate multiple employee payrolls\n\n🖥️ Required Output:\n• Display gross salary, deductions, and net pay\n• Option to process another employee'
-  },
-  {
-    name: 'Electricity Bill Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate an electricity bill based on kWh consumption and applicable rate tier.\n\n📌 Requirements:\n• Input customer name and kWh consumed\n• Calculate tiered consumption rate & surcharge\n• Decision logic for different kWh consumption tiers\n\n🖥️ Required Output:\n• Itemized power bill with total amount due\n• Option to calculate another bill'
-  },
-  {
-    name: 'Water Bill Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate a water bill based on cubic meter consumption and applicable charge.\n\n📌 Requirements:\n• Input cubic meters used and customer type (residential/commercial)\n• Calculate base fee and consumption rate with if/else\n• Use loop to repeat billing calculations'
-  },
-  {
-    name: 'Grocery Checkout System',
-    category: 'Java Practical Exam',
-    description: 'Calculate item subtotals, total purchase, discount, and final amount.\n\n📌 Requirements:\n• Accept item price, quantity, and customer senior/member discount\n• Calculate subtotal, discount amount, and cash change\n• Loop through multiple item purchases'
-  },
-  {
-    name: 'Bus Fare Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate passenger fare based on passenger type (regular/student/senior) and travel distance.\n\n📌 Requirements:\n• Input passenger classification and kilometers travelled\n• Apply 20% discount for student/senior with decision statement\n• Calculate total fare with loop option'
-  },
-  {
-    name: 'Parking Fee Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate parking fees based on the number of hours parked and vehicle type (motorcycle/car/truck).\n\n📌 Requirements:\n• Input vehicle type and total hours\n• First 2 hours base rate + hourly excess rate calculation\n• Loop for multiple parking ticket entries'
-  },
-  {
-    name: 'Restaurant Ordering System',
-    category: 'Java Practical Exam',
-    description: 'Calculate the total cost of selected food items and applicable discount.\n\n📌 Requirements:\n• Display menu with numbered choices using switch/case\n• Accept item quantity and compute total bill\n• Loop for adding more items to the order'
-  },
-  {
-    name: 'Cinema Ticket System',
-    category: 'Java Practical Exam',
-    description: 'Calculate total cinema ticket cost based on ticket type (2D/3D/IMAX) and quantity.\n\n📌 Requirements:\n• Input movie screening type and number of tickets\n• Apply matinee or senior discount via conditional check\n• Loop for multiple customer transactions'
-  },
-  {
-    name: 'Hotel Billing System',
-    category: 'Java Practical Exam',
-    description: 'Calculate a guest room bill based on room type (Standard/Deluxe/Suite) and number of nights.\n\n📌 Requirements:\n• Input room choice and duration of stay\n• Calculate room total, service charge, and taxes\n• Loop for processing checkouts'
-  },
-  {
-    name: 'Mobile Load Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate the total cost of selected mobile load packages and airtime credits.\n\n📌 Requirements:\n• Input mobile number and load promo code / amount\n• Validate payment cash tendered and compute change\n• Loop to process another transaction'
-  },
-  {
-    name: 'Simple Inventory Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate product inventory value and determine stock status (Low/Adequate/Overstocked).\n\n📌 Requirements:\n• Input product name, unit cost, and stock quantity\n• Calculate total inventory asset value\n• Determine reorder warning with if/else'
-  },
-  {
-    name: 'Quiz Score Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate quiz percentage and determine the student remarks (Excellent/Good/Needs Improvement).\n\n📌 Requirements:\n• Input total items and correct answers\n• Calculate score percentage (Score / Total * 100)\n• Output descriptive letter grade or remark'
-  },
-  {
-    name: 'ATM Withdrawal Simulation',
-    category: 'Java Practical Exam',
-    description: 'Simulate balance checking and withdrawal with transaction validation.\n\n📌 Requirements:\n• Input initial balance, PIN validation, and withdrawal amount\n• Check for sufficient funds using if/else\n• Loop allowing multiple ATM transactions until Exit'
-  },
-  {
-    name: 'Sales Commission Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate salesperson commission based on total monthly sales bracket.\n\n📌 Requirements:\n• Input agent name and gross sales volume\n• Multi-tier commission percentage using if-else if\n• Loop to evaluate sales agents'
-  },
-  {
-    name: 'Temperature Converter',
-    category: 'Java Practical Exam',
-    description: 'Convert Celsius / Fahrenheit values and display weather advice.\n\n📌 Requirements:\n• Input temperature value and conversion mode (C to F or F to C)\n• Perform mathematical conversion formula\n• Decision structure for hot / warm / cold warning'
-  },
-  {
-    name: 'BMI Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate Body Mass Index (BMI) and determine corresponding health category.\n\n📌 Requirements:\n• Input weight (kg) and height (meters)\n• Compute BMI = weight / (height * height)\n• Classify Underweight / Normal / Overweight / Obese'
-  },
-  {
-    name: 'Salary Deduction Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate mandatory contributions (SSS, PhilHealth, Pag-IBIG, Tax) and net take-home pay.\n\n📌 Requirements:\n• Input basic monthly salary\n• Calculate percentage deductions and total tax\n• Display itemized payslip breakdown'
-  },
-  {
-    name: 'Discount Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate promotional discount and final payable price based on purchase tiers.\n\n📌 Requirements:\n• Input original item price and promo voucher\n• Apply 10%/20%/30% discount bracket\n• Display savings and final checkout price'
-  },
-  {
-    name: 'Driving Speed Checker',
-    category: 'Java Practical Exam',
-    description: 'Check whether a vehicle exceeds the speed limit and calculate the overspeeding penalty fee.\n\n📌 Requirements:\n• Input detected speed (km/h) and zone speed limit\n• Evaluate speed difference with if/else\n• Issue fine ticket or safe driving confirmation'
-  },
-  {
-    name: 'Age Category System',
-    category: 'Java Practical Exam',
-    description: 'Determine a person age group (Infant, Child, Teenager, Adult, Senior) and eligibility.\n\n📌 Requirements:\n• Input birth year or age\n• Nested if/else decision logic\n• Output age group and voting / driving eligibility'
-  },
-  {
-    name: 'Leap Year Checker',
-    category: 'Java Practical Exam',
-    description: 'Determine whether a given calendar year is a Leap Year using modulus operators.\n\n📌 Requirements:\n• Input year integer\n• Divisibility check: (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)\n• Loop to test multiple years'
-  },
-  {
-    name: 'Number Analyzer',
-    category: 'Java Practical Exam',
-    description: 'Accept multiple integer inputs, compute their sum, average, and identify highest & lowest numbers.\n\n📌 Requirements:\n• Loop to accept N numbers from user\n• Accumulator calculation for sum and average\n• Min/Max comparison tracking'
-  },
-  {
-    name: 'Simple Unit Converter',
-    category: 'Java Practical Exam',
-    description: 'Convert values between units of measurement (Length: KM to Miles, Weight: KG to Lbs).\n\n📌 Requirements:\n• Menu selection using switch/case\n• Convert user input with conversion multiplier\n• Option to perform another conversion'
-  },
-  {
-    name: 'Loan Payment Calculator',
-    category: 'Java Practical Exam',
-    description: 'Calculate loan interest, total repayable amount, and monthly amortization installment.\n\n📌 Requirements:\n• Input principal loan amount, annual interest rate, and loan term in months\n• Calculate simple or compound interest\n• Output monthly installment payment'
+// Helper: Format a clean, structured description from an assessment system object
+export function formatSystemDescription(sys) {
+  const parts = [];
+  
+  if (sys.instructions) {
+    parts.push(`📋 Instructions:\n${sys.instructions}`);
   }
-];
 
-// Seed default systems if pool is empty
-const countStmt = db.prepare('SELECT COUNT(*) as count FROM system_pool');
-const countResult = countStmt.get();
-if (countResult.count === 0) {
-  const insertStmt = db.prepare(`
-    INSERT INTO system_pool (name, category, description, is_active)
-    VALUES (?, ?, ?, 1)
-  `);
-  for (const sys of DEFAULT_SYSTEMS) {
-    insertStmt.run(sys.name, sys.category, sys.description);
+  if (Array.isArray(sys.required_inputs) && sys.required_inputs.length > 0) {
+    parts.push(`⌨️ Required Inputs:\n• ${sys.required_inputs.join('\n• ')}`);
   }
-  console.log(`[DB] Initialized system pool with ${DEFAULT_SYSTEMS.length} default systems.`);
+
+  if (Array.isArray(sys.requirements) && sys.requirements.length > 0) {
+    parts.push(`⚙️ Key Requirements:\n• ${sys.requirements.join('\n• ')}`);
+  }
+
+  if (Array.isArray(sys.menu_options) && sys.menu_options.length > 0) {
+    parts.push(`📑 Menu Options:\n• ${sys.menu_options.join('\n• ')}`);
+  }
+
+  if (sys.menu_validation) {
+    parts.push(`🛡️ Menu Validation:\n${sys.menu_validation}`);
+  }
+
+  if (Array.isArray(sys.required_output) && sys.required_output.length > 0) {
+    parts.push(`🖥️ Required Output:\n• ${sys.required_output.join('\n• ')}`);
+  }
+
+  return parts.join('\n\n');
 }
 
+// Load default 25 assessment systems from assessment_topics.json
+let assessmentMeta = {
+  schema_version: "1.1",
+  title: "Java Fundamentals Practical Assessment - 25 Systems",
+  duration_minutes: 60,
+  application_type: "Java console application",
+  common_requirements: [
+    "Every system must accept at least 2 user inputs.",
+    "Every system must contain at least 1 loop (for, while, or do-while).",
+    "Every system must perform at least 1 calculation or meaningful processing step.",
+    "Every system must use at least 1 decision (if/else, if/else-if, or switch).",
+    "Use Scanner for keyboard input and System.out for output.",
+    "Use appropriate variables and data types.",
+    "Display clear prompts and readable results."
+  ],
+  menu_validation_rules: [
+    "Display available menu choices before asking for a selection.",
+    "Accept only a choice explicitly listed in the current menu.",
+    "If the choice is outside the menu, display an invalid-choice message and ask again.",
+    "Do not execute any action for an invalid choice.",
+    "Apply validation to the main menu and all submenus."
+  ],
+  input_validation_rules: [
+    "Reject negative values where they are not meaningful.",
+    "Reject zero when a positive value is required, such as quantity, duration, height, or question count.",
+    "Reject blank names or identifiers where required.",
+    "For invalid input, display a helpful message and prompt again."
+  ],
+  restrictions: [
+    "No arrays required",
+    "No Java Swing",
+    "No JDBC or database",
+    "No external libraries",
+    "No advanced OOP required"
+  ],
+  submission_requirements: [
+    "Java source file",
+    "Screenshot of source code",
+    "Screenshot of successful program output"
+  ]
+};
+
+let assessmentSystems = [];
+
+try {
+  const jsonPath = path.join(__dirname, 'assessment_topics.json');
+  if (fs.existsSync(jsonPath)) {
+    const rawData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (rawData.title) {
+      assessmentMeta = {
+        schema_version: rawData.schema_version,
+        title: rawData.title,
+        duration_minutes: rawData.duration_minutes,
+        application_type: rawData.application_type,
+        common_requirements: rawData.common_requirements,
+        menu_validation_rules: rawData.menu_validation_rules,
+        input_validation_rules: rawData.input_validation_rules,
+        restrictions: rawData.restrictions,
+        submission_requirements: rawData.submission_requirements
+      };
+    }
+    assessmentSystems = rawData.systems || [];
+  }
+} catch (err) {
+  console.error('[DB] Error loading assessment_topics.json:', err);
+}
+
+const DEFAULT_SYSTEMS = assessmentSystems.map(sys => {
+  const detailsObj = {
+    ...sys,
+    assessment_meta: assessmentMeta
+  };
+  return {
+    id: sys.id,
+    name: sys.title,
+    category: 'Java Practical Exam',
+    description: formatSystemDescription(sys),
+    details_json: JSON.stringify(detailsObj)
+  };
+});
+
+// Seed or synchronize default 25 assessment systems into SQLite
+export function syncDefaultSystems(force = false) {
+  try {
+    const countStmt = db.prepare('SELECT COUNT(*) as count FROM system_pool');
+    const count = countStmt.get().count;
+    const detailsCountStmt = db.prepare('SELECT COUNT(*) as count FROM system_pool WHERE details_json IS NOT NULL');
+    const detailsCount = detailsCountStmt.get().count;
+
+    if (force || count === 0 || detailsCount < DEFAULT_SYSTEMS.length) {
+      console.log(`[DB] Syncing system pool with ${DEFAULT_SYSTEMS.length} Java Practical Assessment systems...`);
+      const upsertStmt = db.prepare(`
+        INSERT INTO system_pool (name, category, description, is_active, details_json)
+        VALUES (?, ?, ?, 1, ?)
+        ON CONFLICT(name) DO UPDATE SET 
+          category = excluded.category,
+          description = excluded.description,
+          details_json = excluded.details_json,
+          is_active = 1
+      `);
+
+      for (const sys of DEFAULT_SYSTEMS) {
+        upsertStmt.run(sys.name, sys.category, sys.description, sys.details_json);
+      }
+      console.log(`[DB] Synced ${DEFAULT_SYSTEMS.length} systems successfully.`);
+    }
+  } catch (e) {
+    console.error('[DB] Error syncing default systems:', e);
+  }
+}
+
+// Initial sync on startup
+syncDefaultSystems();
+
 export default db;
-export { DEFAULT_SYSTEMS };
+export { DEFAULT_SYSTEMS, assessmentMeta };
